@@ -28,6 +28,25 @@ files = [
 ]
 
 [[package]]
+name = "crispy-bootstrap4"
+version = "2025.6"
+description = "Bootstrap4 template pack for django-crispy-forms"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "crispy_bootstrap4-2025.6-py3-none-any.whl", hash = "sha256:64bf732b27690c7147bfaa154b4b690217bee81c71731daf5da73de00ee01943"},
+    {file = "crispy_bootstrap4-2025.6.tar.gz", hash = "sha256:69066c33fc9c8841cbd8741a7ec99ad9234f12877b4549490031a47c2c1abd79"},
+]
+
+[package.dependencies]
+django = ">=4.2"
+django-crispy-forms = ">=2.3"
+
+[package.extras]
+test = ["pytest", "pytest-django"]
+
+[[package]]
 name = "distlib"
 version = "0.4.0"
 description = "Distribution utilities"
@@ -91,20 +110,19 @@ files = [
 Django = ">=4.2"
 
 [[package]]
-name = "django-tinymce4-lite"
-version = "1.8.0"
-description = "A Django application that provides a fully functional TinyMCE 4 editor widget for models and forms."
+name = "django-tinymce"
+version = "4.1.0"
+description = "A Django application that contains a widget to render a"
 optional = false
-python-versions = "*"
+python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "django-tinymce4-lite-1.8.0.tar.gz", hash = "sha256:eb0ee7eda19970d06484f9e121871de01287b5345c4007ea2582d6f80ec3edb3"},
-    {file = "django_tinymce4_lite-1.8.0-py3-none-any.whl", hash = "sha256:2d53510ddb5fe20f25e525d4eaf7c8f8a567b85c9cc29f8ab2964419d9352d88"},
+    {file = "django_tinymce-4.1.0-py3-none-any.whl", hash = "sha256:9804836e6d2b08de3b03a27c100f8c2e9633549913eff8b323678a10cd48b94e"},
+    {file = "django_tinymce-4.1.0.tar.gz", hash = "sha256:02e3b70e940fd299f0fbef4315aee5c185664e1eb8cd396b176963954e4357c9"},
 ]
 
 [package.dependencies]
-Django = ">=1.11"
-jsmin = "*"
+django = ">=3.2"
 
 [[package]]
 name = "filelock"
@@ -137,17 +155,6 @@ files = [
 
 [package.extras]
 license = ["ukkonen"]
-
-[[package]]
-name = "jsmin"
-version = "3.0.1"
-description = "JavaScript minifier."
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "jsmin-3.0.1.tar.gz", hash = "sha256:c0959a121ef94542e807a674142606f7e90214a2b3d1eb17300244bbb5cc2bfc"},
-]
 
 [[package]]
 name = "nodeenv"
@@ -593,4 +600,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11"
-content-hash = "a823109641747ef1652deb9bc56e527e18064a6702ae0b0fe7c42886af8505a5"
+content-hash = "e0f1a9eae2f204665870995eab518405d2ab14bcc701ad3664dddaf8db89e5aa"
