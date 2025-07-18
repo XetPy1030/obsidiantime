@@ -182,7 +182,11 @@ def chat_api_messages(request):
     )
 
     messages_data = []
+    latest_message_id = last_message_id
+
     for msg in new_messages:
+        latest_message_id = msg.id  # Обновляем ID последнего сообщения
+
         message_data = {
             "id": msg.id,
             "author": msg.author.username,
@@ -215,6 +219,6 @@ def chat_api_messages(request):
     return JsonResponse(
         {
             "messages": messages_data,
-            "last_id": new_messages.last().id if new_messages else last_message_id,
+            "last_id": latest_message_id,
         }
     )

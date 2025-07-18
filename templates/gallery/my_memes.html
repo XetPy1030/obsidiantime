@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - ObsidianTime{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-user-images text-info"></i> {{ title }}</h1>
+                <div>
+                    <a href="{% url 'gallery:gallery_list' %}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-images"></i> Все мемы
+                    </a>
+                    <a href="{% url 'gallery:upload_meme' %}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Загрузить мем
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика пользователя -->
+    {% if memes %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <i class="fas fa-images fa-2x text-primary mb-2"></i>
+                                <h4>{{ page_obj.paginator.count }}</h4>
+                                <small class="text-muted">Загружено мемов</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <i class="fas fa-thumbs-up fa-2x text-success mb-2"></i>
+                                <h4>{{ total_likes|default:0 }}</h4>
+                                <small class="text-muted">Получено лайков</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <i class="fas fa-eye fa-2x text-info mb-2"></i>
+                                <h4>{{ total_views|default:0 }}</h4>
+                                <small class="text-muted">Всего просмотров</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <i class="fas fa-comments fa-2x text-warning mb-2"></i>
+                                <h4>{{ total_comments|default:0 }}</h4>
+                                <small class="text-muted">Комментариев</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Сетка мемов -->
+    <div class="row">
+        {% for meme in memes %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card meme-card h-100">
+                <div class="position-relative">
+                    <img src="{{ meme.image.url }}" class="card-img-top meme-image" alt="{{ meme.title }}">
+                    <div class="position-absolute top-0 end-0 p-2">
+                        <span class="badge bg-dark">
+                            <i class="fas fa-eye"></i> {{ meme.views }}
+                        </span>
+                    </div>
+                    {% if not meme.is_approved %}
+                    <div class="position-absolute top-0 start-0 p-2">
+                        <span class="badge bg-warning">
+                            <i class="fas fa-clock"></i> На модерации
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ meme.title }}</h5>
+                    {% if meme.description %}
+                    <p class="card-text text-muted small">{{ meme.description|truncatechars:100 }}</p>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar"></i> {{ meme.created_at|date:"d.m.Y H:i" }}
+                        </small>
+                        <div class="status-badge">
+                            {% if meme.is_approved %}
+                            <span class="badge bg-success">Опубликован</span>
+                            {% else %}
+                            <span class="badge bg-warning">Модерация</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="reaction-stats">
+                            <span class="text-success me-2">
+                                <i class="fas fa-thumbs-up"></i> {{ meme.likes_count }}
+                            </span>
+                            <span class="text-danger me-2">
+                                <i class="fas fa-thumbs-down"></i> {{ meme.dislikes_count }}
+                            </span>
+                            <span class="text-info me-2">
+                                <i class="fas fa-comments"></i> {{ meme.comments_count }}
+                            </span>
+                            <span class="badge bg-primary">
+                                ★ {{ meme.get_rating }}
+                            </span>
+                        </div>
+                        <div class="action-buttons">
+                            {% if meme.is_approved %}
+                            <a href="{% url 'gallery:meme_detail' meme.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% endif %}
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-edit"></i> Редактировать</a></li>
+                                    <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash"></i> Удалить</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-images fa-4x text-muted mb-3"></i>
+                <h3 class="text-muted">У вас пока нет мемов</h3>
+                <p class="text-muted">Загрузите свой первый мем и начните собирать лайки!</p>
+                <a href="{% url 'gallery:upload_meme' %}" class="btn btn-success btn-lg">
+                    <i class="fas fa-plus"></i> Загрузить первый мем
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Пагинация -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Пагинация мемов">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">Первая</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Последняя</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<style>
+.stat-item {
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-3px);
+}
+
+.meme-image {
+    height: 200px;
+    object-fit: cover;
+    transition: all 0.3s ease;
+}
+
+.meme-card:hover .meme-image {
+    transform: scale(1.05);
+}
+
+.reaction-stats span {
+    font-size: 0.9rem;
+}
+
+.action-buttons .btn {
+    margin-left: 0.25rem;
+}
+</style>
+{% endblock %} 

@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - ObsidianTime{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-trophy text-warning"></i> {{ title }}</h1>
+                <div>
+                    <a href="{% url 'gallery:gallery_list' %}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-images"></i> Все мемы
+                    </a>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'gallery:upload_meme' %}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Загрузить мем
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подиум для топ-3 -->
+    {% if memes %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark text-center">
+                    <h4 class="mb-0"><i class="fas fa-medal"></i> Подиум лучших мемов</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row justify-content-center">
+                        {% for meme in memes|slice:":3" %}
+                        <div class="col-md-4 mb-3">
+                            <div class="podium-item text-center position-relative">
+                                {% if forloop.counter == 1 %}
+                                <div class="position-absolute top-0 start-50 translate-middle">
+                                    <span class="badge bg-warning fs-4">🥇</span>
+                                </div>
+                                {% elif forloop.counter == 2 %}
+                                <div class="position-absolute top-0 start-50 translate-middle">
+                                    <span class="badge bg-secondary fs-4">🥈</span>
+                                </div>
+                                {% elif forloop.counter == 3 %}
+                                <div class="position-absolute top-0 start-50 translate-middle">
+                                    <span class="badge bg-warning fs-4">🥉</span>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="card meme-card h-100 border-{% if forloop.counter == 1 %}warning{% elif forloop.counter == 2 %}secondary{% else %}warning{% endif %}">
+                                    <img src="{{ meme.image.url }}" class="card-img-top meme-image" alt="{{ meme.title }}">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ meme.title }}</h6>
+                                        <div class="text-center">
+                                            <div class="d-flex justify-content-center align-items-center mb-2">
+                                                <span class="badge bg-success me-2">
+                                                    <i class="fas fa-thumbs-up"></i> {{ meme.likes_count }}
+                                                </span>
+                                                <span class="badge bg-danger me-2">
+                                                    <i class="fas fa-thumbs-down"></i> {{ meme.dislikes_count }}
+                                                </span>
+                                                <span class="badge bg-primary">
+                                                    ★ {{ meme.get_rating }}
+                                                </span>
+                                            </div>
+                                            <small class="text-muted">
+                                                <i class="fas fa-user"></i> {{ meme.author.username }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer text-center">
+                                        <a href="{% url 'gallery:meme_detail' meme.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> Посмотреть
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Остальные мемы -->
+    <div class="row">
+        {% for meme in memes %}
+        {% if forloop.counter > 3 %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card meme-card h-100">
+                <div class="position-relative">
+                    <img src="{{ meme.image.url }}" class="card-img-top meme-image" alt="{{ meme.title }}">
+                    <div class="position-absolute top-0 start-0 p-2">
+                        <span class="badge bg-dark fs-6">#{{ forloop.counter }}</span>
+                    </div>
+                    <div class="position-absolute top-0 end-0 p-2">
+                        <span class="badge bg-dark">
+                            <i class="fas fa-eye"></i> {{ meme.views }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">{{ meme.title }}</h6>
+                    {% if meme.description %}
+                    <p class="card-text text-muted small">{{ meme.description|truncatechars:80 }}</p>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">
+                            <i class="fas fa-user"></i> {{ meme.author.username }}
+                        </small>
+                        <small class="text-muted">
+                            {{ meme.created_at|date:"d.m.Y" }}
+                        </small>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="reaction-buttons">
+                            {% if user.is_authenticated %}
+                            <button class="reaction-btn like-btn me-1 {% if meme.id in user_likes %}liked{% endif %}"
+                                    data-meme-id="{{ meme.id }}"
+                                    data-url="{% url 'gallery:toggle_like' meme.pk %}">
+                                <i class="fas fa-thumbs-up"></i>
+                                <span class="like-count">{{ meme.likes_count }}</span>
+                            </button>
+                            <button class="reaction-btn dislike-btn me-2 {% if meme.id in user_dislikes %}disliked{% endif %}"
+                                    data-meme-id="{{ meme.id }}"
+                                    data-url="{% url 'gallery:toggle_dislike' meme.pk %}">
+                                <i class="fas fa-thumbs-down"></i>
+                                <span class="dislike-count">{{ meme.dislikes_count }}</span>
+                            </button>
+                            {% else %}
+                            <span class="text-muted me-2">
+                                <i class="fas fa-thumbs-up"></i> {{ meme.likes_count }}
+                            </span>
+                            <span class="text-muted me-2">
+                                <i class="fas fa-thumbs-down"></i> {{ meme.dislikes_count }}
+                            </span>
+                            {% endif %}
+                            
+                            <span class="badge bg-primary">
+                                ★ <span class="rating" data-meme-id="{{ meme.id }}">{{ meme.get_rating }}</span>
+                            </span>
+                        </div>
+                        <a href="{% url 'gallery:meme_detail' meme.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-trophy fa-4x text-muted mb-3"></i>
+                <h3 class="text-muted">Пока нет мемов в топе</h3>
+                <p class="text-muted">Будьте первым, кто загрузит мем!</p>
+                {% if user.is_authenticated %}
+                <a href="{% url 'gallery:upload_meme' %}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Загрузить мем
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.podium-item {
+    margin-top: 2rem;
+}
+
+.meme-image {
+    height: 200px;
+    object-fit: cover;
+}
+
+.podium-item .meme-image {
+    height: 250px;
+}
+
+.card.meme-card {
+    transition: all 0.3s ease;
+}
+
+.card.meme-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.badge {
+    z-index: 10;
+}
+</style>
+{% endblock %} 

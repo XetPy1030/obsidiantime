@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
@@ -17,9 +17,9 @@ def gallery_list(request):
         Meme.objects.filter(is_approved=True)
         .select_related("author")
         .annotate(
-            likes_count=Count("likes"),
-            dislikes_count=Count("dislikes"),
-            comments_count=Count("comments"),
+            total_likes=Count("likes"),
+            total_dislikes=Count("dislikes"),
+            total_comments=Count("comments"),
         )
     )
 
@@ -206,10 +206,10 @@ def top_memes(request):
         Meme.objects.filter(is_approved=True)
         .select_related("author")
         .annotate(
-            likes_count=Count("likes"),
-            dislikes_count=Count("dislikes"),
+            total_likes=Count("likes"),
+            total_dislikes=Count("dislikes"),
+            rating=Count("likes") - Count("dislikes"),
         )
-        .extra(select={"rating": "likes_count - dislikes_count"})
         .order_by("-rating", "-views")[:50]
     )
 
@@ -244,11 +244,18 @@ def my_memes(request):
     memes = (
         Meme.objects.filter(author=request.user)
         .annotate(
-            likes_count=Count("likes"),
-            dislikes_count=Count("dislikes"),
-            comments_count=Count("comments"),
+            total_likes=Count("likes"),
+            total_dislikes=Count("dislikes"),
+            total_comments=Count("comments"),
         )
         .order_by("-created_at")
+    )
+
+    # Подсчитываем общую статистику через агрегацию
+    user_memes_stats = Meme.objects.filter(author=request.user).aggregate(
+        total_likes=Count("likes"),
+        total_views=Sum("views"),
+        total_comments=Count("comments"),
     )
 
     # Пагинация
@@ -260,6 +267,9 @@ def my_memes(request):
         "page_obj": page_obj,
         "memes": page_obj.object_list,
         "title": "Мои мемы",
+        "total_likes": user_memes_stats["total_likes"] or 0,
+        "total_views": user_memes_stats["total_views"] or 0,
+        "total_comments": user_memes_stats["total_comments"] or 0,
     }
     return render(request, "gallery/my_memes.html", context)
 

@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}{{ meme.title }} - ObsidianTime{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Мем -->
+            <div class="card shadow-lg mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-1">{{ meme.title }}</h3>
+                        <small class="text-muted">
+                            <i class="fas fa-user"></i> {{ meme.author.username }} • 
+                            <i class="fas fa-calendar"></i> {{ meme.created_at|date:"d.m.Y H:i" }}
+                        </small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-secondary me-2">
+                            <i class="fas fa-eye"></i> {{ meme.views }}
+                        </span>
+                        {% if user == meme.author or user.is_staff %}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-edit"></i> Редактировать</a></li>
+                                <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash"></i> Удалить</a></li>
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <img src="{{ meme.image.url }}" class="img-fluid" alt="{{ meme.title }}" style="max-height: 600px;">
+                </div>
+                
+                {% if meme.description %}
+                <div class="card-body">
+                    <p class="card-text">{{ meme.description }}</p>
+                </div>
+                {% endif %}
+                
+                <div class="card-footer">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="reaction-buttons">
+                                {% if user.is_authenticated %}
+                                <button class="btn btn-outline-success like-btn me-2 {% if user_liked %}liked{% endif %}"
+                                        data-meme-id="{{ meme.id }}"
+                                        data-url="{% url 'gallery:toggle_like' meme.pk %}">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    <span class="like-count">{{ meme.likes_count }}</span>
+                                </button>
+                                <button class="btn btn-outline-danger dislike-btn me-2 {% if user_disliked %}disliked{% endif %}"
+                                        data-meme-id="{{ meme.id }}"
+                                        data-url="{% url 'gallery:toggle_dislike' meme.pk %}">
+                                    <i class="fas fa-thumbs-down"></i>
+                                    <span class="dislike-count">{{ meme.dislikes_count }}</span>
+                                </button>
+                                {% else %}
+                                <span class="text-muted me-3">
+                                    <i class="fas fa-thumbs-up"></i> {{ meme.likes_count }}
+                                </span>
+                                <span class="text-muted me-3">
+                                    <i class="fas fa-thumbs-down"></i> {{ meme.dislikes_count }}
+                                </span>
+                                {% endif %}
+                                
+                                <span class="badge bg-primary me-2">
+                                    Рейтинг: <span class="rating" data-meme-id="{{ meme.id }}">{{ meme.get_rating }}</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button class="btn btn-outline-info btn-sm copy-to-clipboard" 
+                                    data-text="{{ request.build_absolute_uri }}">
+                                <i class="fas fa-copy"></i> Скопировать ссылку
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="shareMeme()">
+                                <i class="fas fa-share"></i> Поделиться
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Комментарии -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-comments"></i> Комментарии ({{ comments.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if user.is_authenticated %}
+                    <!-- Форма добавления комментария -->
+                    <div class="mb-4">
+                        <form method="post" action="{% url 'gallery:add_comment' meme.pk %}">
+                            {% csrf_token %}
+                            {% crispy comment_form %}
+                        </form>
+                    </div>
+                    <hr>
+                    {% endif %}
+                    
+                    <!-- Список комментариев -->
+                    {% for comment in comments %}
+                    <div class="comment-item mb-3 p-3 border rounded">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    <strong class="text-primary me-2">{{ comment.author.username }}</strong>
+                                    <small class="text-muted">{{ comment.created_at|date:"d.m.Y H:i" }}</small>
+                                </div>
+                                <p class="mb-0">{{ comment.content|linebreaks }}</p>
+                            </div>
+                            {% if user == comment.author or user.is_staff %}
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash"></i> Удалить</a></li>
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">Пока нет комментариев</h6>
+                        {% if user.is_authenticated %}
+                        <p class="text-muted">Будьте первым, кто оставит комментарий!</p>
+                        {% else %}
+                        <p class="text-muted">
+                            <a href="{% url 'main:login' %}">Войдите</a>, чтобы оставить комментарий
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Призыв к действию для незарегистрированных -->
+            {% if not user.is_authenticated %}
+            <div class="card border-primary mt-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-primary">Понравился мем?</h5>
+                    <p class="card-text">
+                        Зарегистрируйтесь, чтобы ставить лайки и оставлять комментарии!
+                    </p>
+                    <a href="{% url 'main:register' %}" class="btn btn-primary me-2">
+                        <i class="fas fa-user-plus"></i> Регистрация
+                    </a>
+                    <a href="{% url 'main:login' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-sign-in-alt"></i> Вход
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Навигация -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'gallery:gallery_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left"></i> Назад к галерее
+                        </a>
+                        <div>
+                            <a href="{% url 'gallery:random_meme' %}" class="btn btn-outline-warning me-2">
+                                <i class="fas fa-dice"></i> Случайный мем
+                            </a>
+                            {% if user.is_authenticated %}
+                            <a href="{% url 'gallery:upload_meme' %}" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Загрузить мем
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.comment-item {
+    transition: all 0.3s ease;
+}
+
+.comment-item:hover {
+    background-color: #f8f9fa;
+}
+
+.reaction-buttons .btn {
+    transition: all 0.3s ease;
+}
+
+.reaction-buttons .btn.liked {
+    background-color: #d1e7dd;
+    color: #198754;
+    border-color: #198754;
+}
+
+.reaction-buttons .btn.disliked {
+    background-color: #f8d7da;
+    color: #dc3545;
+    border-color: #dc3545;
+}
+</style>
+
+<script>
+function shareMeme() {
+    const title = '{{ meme.title }}';
+    const url = window.location.href;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: `Мем: ${title}`,
+            text: `Смотри этот мем на ObsidianTime!`,
+            url: url
+        });
+    } else {
+        const shareText = `Мем: ${title} ${url}`;
+        navigator.clipboard.writeText(shareText).then(() => {
+            alert('Ссылка скопирована в буфер обмена!');
+        });
+    }
+}
+
+$(document).ready(function() {
+    // Автоматическое обновление счетчиков после AJAX запросов лайков/дизлайков
+    // (функционал уже реализован в main.js)
+});
+</script>
+{% endblock %} 
