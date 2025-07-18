@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}Цитатник - ObsidianTime{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-quote-left text-warning"></i> Цитатник</h1>
+                {% if user.is_authenticated %}
+                <a href="{% url 'main:add_quote' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Добавить цитату
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Фильтры -->
+    <div class="card mb-4">
+        <div class="card-body">
+            {% crispy form %}
+        </div>
+    </div>
+
+    <!-- Список цитат -->
+    <div class="row">
+        {% for quote in quotes %}
+        <div class="col-lg-6 mb-4">
+            <div class="card quote-card h-100">
+                <div class="card-body">
+                    <blockquote class="blockquote mb-3">
+                        <p class="quote-text">"{{ quote.text }}"</p>
+                        <footer class="blockquote-footer quote-author">
+                            {{ quote.author }}
+                        </footer>
+                    </blockquote>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-user"></i> {{ quote.added_by.username }}
+                            <span class="mx-2">•</span>
+                            <i class="fas fa-clock"></i> {{ quote.created_at|date:"d.m.Y H:i" }}
+                            <span class="mx-2">•</span>
+                            <i class="fas fa-eye"></i> {{ quote.views }}
+                        </small>
+                        
+                        <div class="d-flex align-items-center">
+                            {% if user.is_authenticated %}
+                            <button class="btn btn-sm btn-outline-danger quote-like-btn me-2"
+                                    data-url="{% url 'main:toggle_quote_like' quote.pk %}"
+                                    data-quote-id="{{ quote.pk }}">
+                                <i class="fas fa-heart"></i> 
+                                <span class="like-count">{{ quote.likes_count }}</span>
+                            </button>
+                            {% else %}
+                            <span class="text-muted">
+                                <i class="fas fa-heart"></i> {{ quote.likes_count }}
+                            </span>
+                            {% endif %}
+                            
+                            <a href="{% url 'main:quote_detail' quote.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-quote-left fa-4x text-muted mb-3"></i>
+                <h3 class="text-muted">Цитаты не найдены</h3>
+                <p class="text-muted">Попробуйте изменить параметры поиска</p>
+                {% if user.is_authenticated %}
+                <a href="{% url 'main:add_quote' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Добавить первую цитату
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Пагинация -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Пагинация цитат">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">Первая</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Последняя</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %} 

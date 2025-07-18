@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}О проекте - ObsidianTime{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Hero Section -->
+            <div class="card shadow-lg mb-5">
+                <div class="card-header bg-primary text-white text-center">
+                    <h1><i class="fas fa-rocket"></i> {{ settings.site_title }}</h1>
+                    <p class="mb-0 lead">{{ settings.site_description }}</p>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <img src="{% static 'images/logo.png' %}" alt="ObsidianTime" class="img-fluid mb-3" style="max-height: 150px;" onerror="this.style.display='none'">
+                    </div>
+                    
+                    <h3><i class="fas fa-info-circle text-primary"></i> О проекте</h3>
+                    <p class="lead">
+                        ObsidianTime — это уникальная платформа для общения, развлечений и творчества. 
+                        Здесь вы можете делиться мемами, участвовать в обсуждениях, создавать голосования 
+                        и находить вдохновляющие цитаты.
+                    </p>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4><i class="fas fa-star text-warning"></i> Возможности</h4>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i> Общение в реальном времени</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Создание голосований</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Галерея мемов</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Коллекция цитат</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Система лайков и рейтингов</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Адаптивный дизайн</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h4><i class="fas fa-users text-info"></i> Сообщество</h4>
+                            <p>
+                                Присоединяйтесь к дружному сообществу ObsidianTime! 
+                                Делитесь своими идеями, участвуйте в дискуссиях 
+                                и находите единомышленников.
+                            </p>
+                            <p>
+                                <strong>Правила сообщества:</strong>
+                            </p>
+                            <ul class="small">
+                                <li>Будьте вежливы и уважительны</li>
+                                <li>Не публикуйте оскорбительный контент</li>
+                                <li>Соблюдайте авторские права</li>
+                                <li>Помогайте новичкам</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Социальные сети -->
+            {% if social_links %}
+            <div class="card mb-5">
+                <div class="card-header">
+                    <h3><i class="fas fa-share-alt"></i> Мы в социальных сетях</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for link in social_links %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 border-0 bg-light">
+                                <div class="card-body text-center">
+                                    <div class="mb-3">
+                                        <i class="{{ link.icon_class }} fa-3x text-primary"></i>
+                                    </div>
+                                    <h5 class="card-title">{{ link.title }}</h5>
+                                    {% if link.description %}
+                                    <p class="card-text text-muted small">{{ link.description }}</p>
+                                    {% endif %}
+                                    <a href="{{ link.url }}" target="_blank" class="btn btn-outline-primary">
+                                        <i class="fas fa-external-link-alt"></i> Перейти
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Технические детали -->
+            <div class="card mb-5">
+                <div class="card-header">
+                    <h3><i class="fas fa-cogs"></i> Технологии</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Backend</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fab fa-python text-primary me-2"></i> Python</li>
+                                <li><i class="fas fa-server text-success me-2"></i> Django Framework</li>
+                                <li><i class="fas fa-database text-info me-2"></i> PostgreSQL</li>
+                                <li><i class="fab fa-docker text-primary me-2"></i> Docker</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Frontend</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fab fa-html5 text-danger me-2"></i> HTML5</li>
+                                <li><i class="fab fa-css3-alt text-primary me-2"></i> CSS3 + Bootstrap</li>
+                                <li><i class="fab fa-js text-warning me-2"></i> JavaScript + jQuery</li>
+                                <li><i class="fas fa-mobile-alt text-info me-2"></i> Responsive Design</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Статистика -->
+            <div class="card mb-5">
+                <div class="card-header">
+                    <h3><i class="fas fa-chart-bar"></i> Статистика проекта</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3">
+                                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                <h4 class="text-primary">{{ users_count|default:"∞" }}</h4>
+                                <small class="text-muted">Пользователей</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3">
+                                <i class="fas fa-comments fa-2x text-success mb-2"></i>
+                                <h4 class="text-success">{{ messages_count|default:"∞" }}</h4>
+                                <small class="text-muted">Сообщений</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3">
+                                <i class="fas fa-images fa-2x text-warning mb-2"></i>
+                                <h4 class="text-warning">{{ memes_count|default:"∞" }}</h4>
+                                <small class="text-muted">Мемов</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="p-3">
+                                <i class="fas fa-quote-left fa-2x text-info mb-2"></i>
+                                <h4 class="text-info">{{ quotes_count|default:"∞" }}</h4>
+                                <small class="text-muted">Цитат</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Призыв к действию -->
+            {% if not user.is_authenticated %}
+            <div class="card border-primary mb-5">
+                <div class="card-body text-center">
+                    <h3 class="card-title text-primary">Присоединяйтесь к нам!</h3>
+                    <p class="card-text">
+                        Создайте аккаунт и станьте частью нашего сообщества. 
+                        Это бесплатно и займет всего минуту!
+                    </p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'main:register' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-user-plus"></i> Регистрация
+                        </a>
+                        <a href="{% url 'main:login' %}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-sign-in-alt"></i> Вход
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card border-success mb-5">
+                <div class="card-body text-center">
+                    <h3 class="card-title text-success">Добро пожаловать, {{ user.username }}!</h3>
+                    <p class="card-text">
+                        Спасибо, что являетесь частью нашего сообщества! 
+                        Исследуйте все возможности платформы.
+                    </p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'chat:chat' %}" class="btn btn-success">
+                            <i class="fas fa-comments"></i> Перейти в чат
+                        </a>
+                        <a href="{% url 'gallery:gallery_list' %}" class="btn btn-outline-success">
+                            <i class="fas fa-images"></i> Посмотреть мемы
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Контакты -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-envelope"></i> Обратная связь</h3>
+                </div>
+                <div class="card-body">
+                    <p>
+                        Есть вопросы, предложения или нашли баг? Мы всегда рады обратной связи!
+                    </p>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-envelope text-primary me-2"></i> Email: admin@obsidiantime.ru</li>
+                        <li><i class="fas fa-bug text-danger me-2"></i> Баг-репорты: GitHub Issues</li>
+                        <li><i class="fas fa-lightbulb text-warning me-2"></i> Предложения: Telegram канал</li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <div class="text-center">
+                        <small class="text-muted">
+                            © 2025 ObsidianTime. Сделано с ❤️ на Django.
+                            <br>
+                            Версия: 1.0.0 | Открытый исходный код
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.list-unstyled li {
+    padding: 0.25rem 0;
+}
+
+.bg-light:hover {
+    background-color: #f8f9fa !important;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.fa-2x {
+    transition: all 0.3s ease;
+}
+
+.p-3:hover .fa-2x {
+    transform: scale(1.1);
+}
+</style>
+{% endblock %} 

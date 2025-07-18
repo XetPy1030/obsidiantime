@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -10,6 +11,7 @@ from django.views.decorators.http import require_POST
 
 from obsidiantime.chat.forms import CustomUserCreationForm
 from obsidiantime.chat.models import Message
+from obsidiantime.gallery.models import Meme
 
 from .forms import QuoteFilterForm, QuoteForm
 from .models import Quote, QuoteLike, SiteSettings, SocialLink
@@ -150,11 +152,22 @@ def register(request):
 
 def about(request):
     """Страница о проекте"""
+
     settings = SiteSettings.get_settings()
     social_links = SocialLink.objects.filter(is_active=True)
+
+    # Статистика
+    users_count = User.objects.count()
+    messages_count = Message.objects.count()
+    memes_count = Meme.objects.filter(is_approved=True).count()
+    quotes_count = Quote.objects.filter(is_approved=True).count()
 
     context = {
         "settings": settings,
         "social_links": social_links,
+        "users_count": users_count,
+        "messages_count": messages_count,
+        "memes_count": memes_count,
+        "quotes_count": quotes_count,
     }
     return render(request, "main/about.html", context)

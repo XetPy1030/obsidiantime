@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}"{{ quote.text|truncatechars:50 }}" - {{ quote.author }} - ObsidianTime{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Цитата -->
+            <div class="card quote-card shadow-lg mb-4">
+                <div class="card-body p-5">
+                    <blockquote class="blockquote text-center mb-4">
+                        <p class="quote-text display-6 mb-4">"{{ quote.text }}"</p>
+                        <footer class="blockquote-footer">
+                            <cite class="quote-author fs-4">{{ quote.author }}</cite>
+                        </footer>
+                    </blockquote>
+                    
+                    <hr>
+                    
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <i class="fas fa-eye fa-2x text-primary mb-2"></i>
+                                <h4>{{ quote.views }}</h4>
+                                <small class="text-muted">Просмотров</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                {% if user.is_authenticated %}
+                                <button class="btn quote-like-btn {% if user_liked %}liked{% endif %}"
+                                        data-url="{% url 'main:toggle_quote_like' quote.pk %}"
+                                        data-quote-id="{{ quote.pk }}">
+                                    <i class="fas fa-heart fa-2x mb-2"></i>
+                                    <h4 class="like-count">{{ quote.likes_count }}</h4>
+                                    <small>Нравится</small>
+                                </button>
+                                {% else %}
+                                <div class="text-muted">
+                                    <i class="fas fa-heart fa-2x mb-2"></i>
+                                    <h4>{{ quote.likes_count }}</h4>
+                                    <small>Нравится</small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <i class="fas fa-user fa-2x text-success mb-2"></i>
+                                <h4>{{ quote.added_by.username }}</h4>
+                                <small class="text-muted">Добавил</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-item">
+                                <i class="fas fa-calendar fa-2x text-info mb-2"></i>
+                                <h4>{{ quote.created_at|date:"d.m" }}</h4>
+                                <small class="text-muted">{{ quote.created_at|date:"Y" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Действия -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <a href="{% url 'main:quotes_list' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-arrow-left"></i> Назад к цитатам
+                            </a>
+                        </div>
+                        <div>
+                            <button class="btn btn-outline-secondary copy-to-clipboard" 
+                                    data-text='"{{ quote.text }}" - {{ quote.author }}'>
+                                <i class="fas fa-copy"></i> Скопировать
+                            </button>
+                            <button class="btn btn-outline-info" onclick="shareQuote()">
+                                <i class="fas fa-share"></i> Поделиться
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if not user.is_authenticated %}
+            <!-- Призыв к регистрации -->
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-primary">Понравилась цитата?</h5>
+                    <p class="card-text">
+                        Зарегистрируйтесь, чтобы ставить лайки и добавлять свои цитаты!
+                    </p>
+                    <a href="{% url 'main:register' %}" class="btn btn-primary me-2">
+                        <i class="fas fa-user-plus"></i> Регистрация
+                    </a>
+                    <a href="{% url 'main:login' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-sign-in-alt"></i> Вход
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.quote-text {
+    font-style: italic;
+    line-height: 1.6;
+    color: #2c3e50;
+}
+
+.quote-author {
+    font-weight: bold;
+    color: #3498db;
+}
+
+.stat-item {
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-3px);
+}
+
+.quote-like-btn {
+    border: none;
+    background: none;
+    color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.quote-like-btn:hover,
+.quote-like-btn.liked {
+    color: #dc3545;
+    background: #f8d7da;
+    border-radius: 10px;
+}
+</style>
+
+<script>
+function shareQuote() {
+    const quote = '"{{ quote.text }}" - {{ quote.author }}';
+    const url = window.location.href;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'Цитата на ObsidianTime',
+            text: quote,
+            url: url
+        });
+    } else {
+        // Fallback для браузеров без Web Share API
+        const shareText = quote + ' ' + url;
+        navigator.clipboard.writeText(shareText).then(() => {
+            alert('Ссылка скопирована в буфер обмена!');
+        });
+    }
+}
+</script>
+{% endblock %} 
