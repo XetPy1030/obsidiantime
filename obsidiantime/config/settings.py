@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "crispy_bootstrap4",
     "tinymce",
     "django_filters",
+    "storages",
     # Local apps
     "obsidiantime.main",
     "obsidiantime.chat",
@@ -142,7 +143,7 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
-# Media files
+# Media files (local development)
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
@@ -172,3 +173,43 @@ TINYMCE_DEFAULT_CONFIG = {
     "alignleft aligncenter alignright alignjustify | "
     "bullist numlist outdent indent | removeformat | help",
 }
+
+# AWS S3 Configuration for media files
+USE_S3 = os.getenv("USE_S3", "false").lower() == "true"
+
+if USE_S3:
+    # AWS S3 settings
+    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
+    AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "us-east-1")
+
+    # Support for MinIO and other S3-compatible services
+    AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL", None)
+    if AWS_S3_ENDPOINT_URL:
+        AWS_S3_CUSTOM_DOMAIN = AWS_S3_ENDPOINT_URL.replace("http://", "").replace(
+            "https://", ""
+        )
+    else:
+        AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+
+    # S3 settings
+    AWS_DEFAULT_ACL = "public-read"
+    AWS_S3_OBJECT_PARAMETERS = {
+        "CacheControl": "max-age=86400",
+    }
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_QUERYSTRING_AUTH = False
+
+    # Static files (CSS, JavaScript, Images)
+    # Для статических файлов можно использовать CloudFront CDN
+    STATICFILES_STORAGE = "obsidiantime.config.storage_backends.StaticStorage"
+    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
+
+    # Media files
+    DEFAULT_FILE_STORAGE = "obsidiantime.config.storage_backends.MediaStorage"
+    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
+
+    # Additional S3 settings for better performance
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
+    AWS_S3_ADDRESSING_STYLE = "virtual"
