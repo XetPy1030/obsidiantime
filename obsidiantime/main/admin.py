@@ -60,8 +60,8 @@ class SocialLinkAdmin(admin.ModelAdmin):
 
 @admin.register(SiteSettings)
 class SiteSettingsAdmin(admin.ModelAdmin):
-    list_display = ["site_title", "show_rickroll"]
-    fields = ["site_title", "site_description", "rickroll_video_url", "show_rickroll"]
+    list_display = ["site_title", "show_rickroll", "has_video"]
+    fields = ["site_title", "site_description", "rickroll_video", "show_rickroll"]
 
     def has_add_permission(self, request):
         # Разрешаем добавление только если настроек еще нет
@@ -70,3 +70,10 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         # Запрещаем удаление настроек
         return False
+
+    def has_video(self, obj):
+        """Показывает есть ли загруженное видео"""
+        return bool(obj.rickroll_video)
+
+    has_video.boolean = True
+    has_video.short_description = "Видео загружено"

@@ -1,5 +1,28 @@
-# Project specific
+# Media files (user uploads)
 media/
+!media/.gitkeep
+
+# Static files (collected)
+staticfiles/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
+
+# Logs
+logs/
+*.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

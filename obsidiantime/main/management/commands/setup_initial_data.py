@@ -43,12 +43,18 @@ class Command(BaseCommand):
             defaults={
                 "site_title": "ObsidianTime",
                 "site_description": "Место для мемов, общения и веселья!",
-                "rickroll_video_url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
                 "show_rickroll": True,
+                # rickroll_video will be empty by default -
+                # admin can upload file manually
             },
         )
         if created:
             self.stdout.write(self.style.SUCCESS("Created site settings"))
+            self.stdout.write(
+                self.style.WARNING(
+                    "Загрузите видео файл для рикролла через админку: /admin/"
+                )
+            )
 
         # Create social links
         social_links_data = [

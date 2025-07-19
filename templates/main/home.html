@@ -15,15 +15,30 @@
                     <p class="mb-0">Лучший сайт для мемов, общения и веселья!</p>
                 </div>
                 <div class="card-body p-0">
+                    {% if settings.rickroll_video %}
                     <div class="ratio ratio-16x9">
-                        <iframe 
-                            src="{{ settings.rickroll_video_url }}" 
-                            title="Добро пожаловать!" 
-                            frameborder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                            allowfullscreen>
-                        </iframe>
+                        <video 
+                            controls 
+                            autoplay 
+                            muted 
+                            loop
+                            class="w-100 h-100"
+                            style="border-radius: 0 0 0.375rem 0.375rem;">
+                            <source src="{{ settings.rickroll_video.url }}" type="video/mp4">
+                            <source src="{{ settings.rickroll_video.url }}" type="video/webm">
+                            <source src="{{ settings.rickroll_video.url }}" type="video/ogg">
+                            Ваш браузер не поддерживает видео.
+                        </video>
                     </div>
+                    {% else %}
+                    <div class="ratio ratio-16x9 d-flex align-items-center justify-content-center bg-light">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-video fa-3x mb-3"></i>
+                            <p>Видео не загружено</p>
+                            <small>Загрузите видео файл в админке</small>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

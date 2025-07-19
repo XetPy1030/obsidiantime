@@ -89,9 +89,12 @@ class SiteSettings(models.Model):
         max_length=100, default="ObsidianTime", verbose_name="Название сайта"
     )
     site_description = models.TextField(blank=True, verbose_name="Описание сайта")
-    rickroll_video_url = models.URLField(
-        default="https://www.youtube.com/embed/dQw4w9WgXcQ",
-        verbose_name="Ссылка на рикролл видео",
+    rickroll_video = models.FileField(
+        upload_to="videos/",
+        blank=True,
+        null=True,
+        verbose_name="Видео для рикролла",
+        help_text="Загрузите видео файл (MP4, WebM, OGG)",
     )
     show_rickroll = models.BooleanField(default=True, verbose_name="Показывать рикролл")
 
