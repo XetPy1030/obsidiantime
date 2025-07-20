@@ -1,61 +1,413 @@
-// ObsidianTime Main JavaScript - Refactored
+// ObsidianTime - Main Application Controller
 'use strict';
 
 /**
  * Главный объект приложения ObsidianTime
+ * Координирует работу всех модулей
  */
 const ObsidianTime = {
-    // Конфигурация
+    // Конфигурация приложения
     config: {
-        scrollOffset: 80,
-        alertTimeout: 5000,
-        searchDebounceDelay: 500
+        version: '2.0.0',
+        debug: false,
+        modules: ['notifications', 'gallery', 'forms', 'ui', 'chat']
     },
 
-    // Инициализация приложения
+    // Состояние приложения
+    state: {
+        initialized: false,
+        activeModules: new Set(),
+        currentTheme: 'light'
+    },
+
+    /**
+     * Инициализация приложения
+     */
     init() {
-        this.setupCSRF();
-        this.initComponents();
-        this.bindEvents();
-        this.initFeatures();
-        console.log('ObsidianTime - Ready to rock! 🚀');
+        if (this.state.initialized) {
+            console.warn('ObsidianTime уже инициализирован');
+            return;
+        }
+
+        this.log('Инициализация ObsidianTime...');
+        
+        try {
+            this.setupErrorHandling();
+            this.detectFeatures();
+            this.initializeModules();
+            this.bindGlobalEvents();
+            this.finalizeInit();
+            
+            this.state.initialized = true;
+            this.log('ObsidianTime успешно инициализирован! 🚀');
+        } catch (error) {
+            console.error('Ошибка инициализации ObsidianTime:', error);
+        }
     },
 
-    // Настройка CSRF токена
-    setupCSRF() {
-        const csrftoken = Utils.getCookie('csrftoken');
-        $.ajaxSetup({
-            beforeSend: (xhr, settings) => {
-                if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
-                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+    /**
+     * Настройка обработки ошибок
+     */
+    setupErrorHandling() {
+        // Глобальная обработка ошибок JavaScript
+        window.addEventListener('error', (event) => {
+            this.handleError('JavaScript Error', event.error, {
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno
+            });
+        });
+
+        // Обработка необработанных Promise
+        window.addEventListener('unhandledrejection', (event) => {
+            this.handleError('Unhandled Promise Rejection', event.reason);
+            event.preventDefault();
+        });
+    },
+
+    /**
+     * Обработка ошибок
+     */
+    handleError(type, error, details = {}) {
+        const errorInfo = {
+            type,
+            message: error.message || error.toString(),
+            stack: error.stack,
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            url: window.location.href,
+            ...details
+        };
+
+        if (this.config.debug) {
+            console.group(`🚨 ${type}`);
+            console.error('Error:', error);
+            console.table(errorInfo);
+            console.groupEnd();
+        }
+
+        // Отправка ошибки на сервер (опционально)
+        this.reportError(errorInfo);
+    },
+
+    /**
+     * Отправка ошибки на сервер
+     */
+    async reportError(errorInfo) {
+        try {
+            await fetch('/api/errors/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': Utils.getCookie('csrftoken')
+                },
+                body: JSON.stringify(errorInfo)
+            });
+        } catch (e) {
+            // Игнорируем ошибки отправки
+        }
+    },
+
+    /**
+     * Определение возможностей браузера
+     */
+    detectFeatures() {
+        const features = {
+            // JavaScript возможности
+            es6: typeof Symbol !== 'undefined',
+            es2017: typeof Object.values === 'function',
+            modules: 'noModule' in HTMLScriptElement.prototype,
+            
+            // Web APIs
+            intersectionObserver: 'IntersectionObserver' in window,
+            resizeObserver: 'ResizeObserver' in window,
+            webp: this.supportsWebP(),
+            touchDevice: 'ontouchstart' in window,
+            
+            // CSS возможности
+            customProperties: CSS.supports('color', 'var(--test)'),
+            grid: CSS.supports('display', 'grid'),
+            flexbox: CSS.supports('display', 'flex'),
+            objectFit: CSS.supports('object-fit', 'cover')
+        };
+
+        // Добавляем классы для CSS
+        Object.entries(features).forEach(([feature, supported]) => {
+            document.documentElement.classList.toggle(`has-${feature}`, supported);
+            document.documentElement.classList.toggle(`no-${feature}`, !supported);
+        });
+
+        this.features = features;
+        this.log('Возможности браузера определены:', features);
+    },
+
+    /**
+     * Проверка поддержки WebP
+     */
+    supportsWebP() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+    },
+
+    /**
+     * Инициализация модулей
+     */
+    initializeModules() {
+        // Проверяем доступность модулей и инициализируем их
+        const moduleChecks = {
+            notifications: () => window.NotificationManager,
+            gallery: () => window.GalleryManager,
+            forms: () => window.FormsManager,
+            ui: () => window.UIManager,
+            chat: () => window.ChatManager
+        };
+
+        Object.entries(moduleChecks).forEach(([moduleName, checkFn]) => {
+            try {
+                const moduleInstance = checkFn();
+                if (moduleInstance) {
+                    this.state.activeModules.add(moduleName);
+                    this.log(`✓ Модуль ${moduleName} активен`);
+                } else {
+                    this.log(`⚠ Модуль ${moduleName} не найден`);
                 }
+            } catch (error) {
+                this.log(`✗ Ошибка модуля ${moduleName}:`, error);
             }
         });
     },
 
-    // Инициализация компонентов
-    initComponents() {
-        Notifications.init();
-        Gallery.init();
-        // Chat.init(); // Удален - теперь используется ChatManager из chat.js
-        Navigation.init();
-        Forms.init();
+    /**
+     * Привязка глобальных событий
+     */
+    bindGlobalEvents() {
+        // Отслеживание изменения размера окна
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                this.handleWindowResize();
+            }, 250);
+        });
+
+        // Отслеживание изменения ориентации
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                this.handleOrientationChange();
+            }, 100);
+        });
+
+        // Отслеживание видимости страницы
+        document.addEventListener('visibilitychange', () => {
+            this.handleVisibilityChange();
+        });
+
+        // Отслеживание состояния сети
+        if ('navigator' in window && 'onLine' in navigator) {
+            window.addEventListener('online', () => this.handleNetworkChange(true));
+            window.addEventListener('offline', () => this.handleNetworkChange(false));
+        }
     },
 
-    // Привязка основных событий
-    bindEvents() {
-        Navigation.bindEvents();
-        Forms.bindEvents();
-        // Gallery события привязываются в Gallery.init() через bindReactionEvents()
-        UI.bindEvents();
+    /**
+     * Обработка изменения размера окна
+     */
+    handleWindowResize() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        // Обновляем CSS переменные
+        document.documentElement.style.setProperty('--window-width', `${width}px`);
+        document.documentElement.style.setProperty('--window-height', `${height}px`);
+        
+        // Определяем точки останова
+        const breakpoints = {
+            mobile: width < 768,
+            tablet: width >= 768 && width < 992,
+            desktop: width >= 992
+        };
+
+        Object.entries(breakpoints).forEach(([name, matches]) => {
+            document.documentElement.classList.toggle(`is-${name}`, matches);
+        });
+
+        this.log('Изменение размера окна:', { width, height, breakpoints });
     },
 
-    // Инициализация дополнительных функций
-    initFeatures() {
-        UI.initTooltips();
-        UI.initLazyLoading();
-        UI.initDarkMode();
-        UI.initScrollAnimations();
+    /**
+     * Обработка изменения ориентации
+     */
+    handleOrientationChange() {
+        const orientation = screen.orientation?.type || 
+                          (window.innerHeight > window.innerWidth ? 'portrait' : 'landscape');
+        
+        document.documentElement.classList.toggle('is-portrait', orientation.includes('portrait'));
+        document.documentElement.classList.toggle('is-landscape', orientation.includes('landscape'));
+        
+        this.log('Изменение ориентации:', orientation);
+    },
+
+    /**
+     * Обработка изменения видимости страницы
+     */
+    handleVisibilityChange() {
+        const isVisible = !document.hidden;
+        
+        if (isVisible) {
+            this.log('Страница стала видимой');
+            // Возобновляем активности (например, анимации, запросы)
+            this.resumeActivities();
+        } else {
+            this.log('Страница скрыта');
+            // Приостанавливаем активности для экономии ресурсов
+            this.pauseActivities();
+        }
+    },
+
+    /**
+     * Обработка изменения состояния сети
+     */
+    handleNetworkChange(isOnline) {
+        document.documentElement.classList.toggle('is-online', isOnline);
+        document.documentElement.classList.toggle('is-offline', !isOnline);
+        
+        if (isOnline) {
+            this.log('Соединение восстановлено');
+            window.NotificationManager?.success('Соединение восстановлено');
+        } else {
+            this.log('Соединение потеряно');
+            window.NotificationManager?.warning('Нет соединения с интернетом');
+        }
+    },
+
+    /**
+     * Приостановка активностей
+     */
+    pauseActivities() {
+        // Уведомляем модули о необходимости приостановить активности
+        this.state.activeModules.forEach(moduleName => {
+            const moduleInstance = this.getModuleInstance(moduleName);
+            if (moduleInstance && typeof moduleInstance.pause === 'function') {
+                moduleInstance.pause();
+            }
+        });
+    },
+
+    /**
+     * Возобновление активностей
+     */
+    resumeActivities() {
+        // Уведомляем модули о необходимости возобновить активности
+        this.state.activeModules.forEach(moduleName => {
+            const moduleInstance = this.getModuleInstance(moduleName);
+            if (moduleInstance && typeof moduleInstance.resume === 'function') {
+                moduleInstance.resume();
+            }
+        });
+    },
+
+    /**
+     * Получение экземпляра модуля
+     */
+    getModuleInstance(moduleName) {
+        const moduleMap = {
+            notifications: () => window.NotificationManager,
+            gallery: () => window.GalleryManager,
+            forms: () => window.FormsManager,
+            ui: () => window.UIManager,
+            chat: () => window.ChatManager
+        };
+
+        return moduleMap[moduleName]?.();
+    },
+
+    /**
+     * Финализация инициализации
+     */
+    finalizeInit() {
+        // Устанавливаем глобальные CSS переменные
+        this.setCSSVariables();
+        
+        // Запускаем начальную обработку размера окна
+        this.handleWindowResize();
+        
+        // Показываем приложение
+        document.body.classList.add('app-loaded');
+        
+        // Скрываем прелоадер
+        this.hidePreloader();
+    },
+
+    /**
+     * Установка CSS переменных
+     */
+    setCSSVariables() {
+        const root = document.documentElement;
+        
+        // Цвета темы
+        const isDark = document.body.classList.contains('dark-mode');
+        this.state.currentTheme = isDark ? 'dark' : 'light';
+        
+        // Размеры
+        root.style.setProperty('--header-height', '60px');
+        root.style.setProperty('--footer-height', '80px');
+        root.style.setProperty('--sidebar-width', '250px');
+        
+        // Анимации
+        root.style.setProperty('--animation-duration', '0.3s');
+        root.style.setProperty('--animation-easing', 'cubic-bezier(0.4, 0, 0.2, 1)');
+    },
+
+    /**
+     * Скрытие прелоадера
+     */
+    hidePreloader() {
+        const preloader = document.querySelector('.preloader');
+        if (preloader) {
+            preloader.style.opacity = '0';
+            setTimeout(() => {
+                if (preloader.parentNode) {
+                    preloader.parentNode.removeChild(preloader);
+                }
+            }, 300);
+        }
+    },
+
+    /**
+     * Логирование
+     */
+    log(...args) {
+        if (this.config.debug || localStorage.getItem('obsidiantime_debug') === 'true') {
+            console.log('%c[ObsidianTime]', 'color: #007bff; font-weight: bold;', ...args);
+        }
+    },
+
+    /**
+     * Получение информации о приложении
+     */
+    getInfo() {
+        return {
+            version: this.config.version,
+            initialized: this.state.initialized,
+            activeModules: Array.from(this.state.activeModules),
+            currentTheme: this.state.currentTheme,
+            features: this.features,
+            performance: {
+                loadTime: performance.timing.loadEventEnd - performance.timing.navigationStart,
+                domReady: performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart
+            }
+        };
+    },
+
+    /**
+     * Включение/выключение режима отладки
+     */
+    setDebugMode(enabled) {
+        this.config.debug = enabled;
+        localStorage.setItem('obsidiantime_debug', enabled.toString());
+        this.log('Режим отладки:', enabled ? 'включен' : 'выключен');
     }
 };
 
@@ -63,7 +415,9 @@ const ObsidianTime = {
  * Утилиты общего назначения
  */
 const Utils = {
-    // Получение cookie
+    /**
+     * Получение cookie
+     */
     getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -79,7 +433,9 @@ const Utils = {
         return cookieValue;
     },
 
-    // Debounce функция
+    /**
+     * Debounce функция
+     */
     debounce(func, delay) {
         let timeoutId;
         return (...args) => {
@@ -88,7 +444,9 @@ const Utils = {
         };
     },
 
-    // Throttle функция
+    /**
+     * Throttle функция
+     */
     throttle(func, delay) {
         let inThrottle;
         return (...args) => {
@@ -100,355 +458,114 @@ const Utils = {
         };
     },
 
-    // Проверка на мобильное устройство
+    /**
+     * Проверка на мобильное устройство
+     */
     isMobile() {
-        return window.innerWidth <= 768;
+        return window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     },
 
-    // Форматирование чисел
+    /**
+     * Форматирование чисел
+     */
     formatNumber(num) {
         return new Intl.NumberFormat('ru-RU').format(num);
-    }
-};
-
-/**
- * Система уведомлений
- */
-const Notifications = {
-    container: null,
-
-    init() {
-        this.container = $('#notifications-container');
-        this.autoHideAlerts();
     },
 
-    // Показ уведомления
-    show(message, type = 'info', timeout = ObsidianTime.config.alertTimeout) {
-        const notification = $(`
-            <div class="notification ${type}">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <strong>
-                            ${this.getIcon(type)} ${message}
-                        </strong>
-                    </div>
-                    <button type="button" class="btn-close" onclick="$(this).parent().parent().remove()"></button>
-                </div>
-            </div>
-        `);
-
-        this.container.append(notification);
-
-        if (timeout > 0) {
-            setTimeout(() => {
-                notification.fadeOut(() => notification.remove());
-            }, timeout);
-        }
-
-        return notification;
-    },
-
-    // Получение иконки по типу
-    getIcon(type) {
-        const icons = {
-            success: '✓',
-            error: '✗',
-            warning: '⚠',
-            info: 'ℹ'
+    /**
+     * Форматирование дат
+     */
+    formatDate(date, options = {}) {
+        const defaultOptions = { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
         };
-        return icons[type] || icons.info;
+        return new Intl.DateTimeFormat('ru-RU', { ...defaultOptions, ...options }).format(date);
     },
 
-    // Автоскрытие алертов
-    autoHideAlerts() {
-        $('.alert, .notification').each(function() {
-            const element = $(this);
-            setTimeout(() => {
-                element.fadeOut(() => element.remove());
-            }, ObsidianTime.config.alertTimeout);
-        });
-    }
-};
-
-/**
- * Навигация и плавная прокрутка
- */
-const Navigation = {
-    init() {
-        this.setupSmoothScrolling();
+    /**
+     * Генерация уникального ID
+     */
+    generateId(prefix = 'id') {
+        return `${prefix}-${Math.random().toString(36).substr(2, 9)}-${Date.now().toString(36)}`;
     },
 
-    bindEvents() {
-        // Плавная прокрутка к якорям
-        $('a[href^="#"]').on('click', this.handleAnchorClick.bind(this));
-    },
-
-    setupSmoothScrolling() {
-        $('html').css('scroll-behavior', 'smooth');
-    },
-
-    handleAnchorClick(event) {
-        const target = $(event.currentTarget.getAttribute('href'));
-        if (target.length) {
-            event.preventDefault();
-            $('html, body').stop().animate({
-                scrollTop: target.offset().top - ObsidianTime.config.scrollOffset
-            }, 1000);
-        }
-    }
-};
-
-/**
- * Обработка форм
- */
-const Forms = {
-    init() {
-        this.setupSearch();
-    },
-
-    bindEvents() {
-        $(document).on('change', 'input[type="file"]', this.handleFileChange);
-        $(document).on('input', '.search-input', this.handleSearch);
-        $(document).on('click', '.confirm-action', this.handleConfirmAction);
-    },
-
-    // Предпросмотр изображений
-    handleFileChange(e) {
-        const file = e.target.files[0];
-        const $input = $(e.target);
-        let $preview = $input.siblings('.image-preview');
-
-        if (file && file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                if ($preview.length === 0) {
-                    $preview = $(`
-                        <div class="image-preview mt-2">
-                            <img src="${e.target.result}" class="img-thumbnail" style="max-height: 200px;">
-                        </div>
-                    `);
-                    $input.after($preview);
-                } else {
-                    $preview.html(`<img src="${e.target.result}" class="img-thumbnail" style="max-height: 200px;">`);
-                }
-            };
-            reader.readAsDataURL(file);
-        } else {
-            $preview.remove();
-        }
-    },
-
-    // Поиск с debounce
-    setupSearch() {
-        this.debouncedSearch = Utils.debounce((form) => {
-            form.submit();
-        }, ObsidianTime.config.searchDebounceDelay);
-    },
-
-    handleSearch(e) {
-        const $input = $(e.target);
-        const query = $input.val();
-        const $form = $input.closest('form');
-
-        if (query.length >= 3 || query.length === 0) {
-            Forms.debouncedSearch($form[0]);
-        }
-    },
-
-    // Подтверждение действий
-    handleConfirmAction(e) {
-        const $element = $(e.target);
-        const message = $element.data('confirm') || 'Вы уверены?';
-        if (!confirm(message)) {
-            e.preventDefault();
-        }
-    }
-};
-
-/**
- * Функциональность галереи и реакций
- */
-const Gallery = {
-    init() {
-        this.bindReactionEvents();
-    },
-
-    bindEvents() {
-        $(document).on('click', '.like-btn, .dislike-btn', this.handleReaction);
-        $(document).on('click', '.quote-like-btn', this.handleQuoteLike);
-    },
-
-    bindReactionEvents() {
-        this.bindEvents();
-    },
-
-    // Обработка реакций на мемы
-    handleReaction(e) {
-        e.preventDefault();
-        const $btn = $(e.currentTarget);
-        const memeId = $btn.data('meme-id');
-        const url = $btn.data('url');
-        const isLike = $btn.hasClass('like-btn');
-
-        if (!url) return;
-
-        // Показываем индикатор загрузки
-        const originalContent = $btn.html();
-        $btn.html('<span class="spinner"></span>');
-
-        $.post(url)
-            .done((data) => {
-                Gallery.updateReactionButtons(memeId, data, isLike);
-            })
-            .fail(() => {
-                Notifications.show('Ошибка при обработке реакции', 'error');
-            })
-            .always(() => {
-                $btn.html(originalContent);
+    /**
+     * Глубокое клонирование объекта
+     */
+    deepClone(obj) {
+        if (obj === null || typeof obj !== 'object') return obj;
+        if (obj instanceof Date) return new Date(obj.getTime());
+        if (obj instanceof Array) return obj.map(item => this.deepClone(item));
+        if (typeof obj === 'object') {
+            const cloned = {};
+            Object.keys(obj).forEach(key => {
+                cloned[key] = this.deepClone(obj[key]);
             });
-    },
-
-    // Обновление кнопок реакций
-    updateReactionButtons(memeId, data, wasLike) {
-        const $likeBtn = $(`.like-btn[data-meme-id="${memeId}"]`);
-        const $dislikeBtn = $(`.dislike-btn[data-meme-id="${memeId}"]`);
-        const $rating = $(`.rating[data-meme-id="${memeId}"]`);
-
-        // Обновляем состояние кнопок
-        $likeBtn.toggleClass('liked', data.liked);
-        $dislikeBtn.toggleClass('disliked', data.disliked);
-
-        // Обновляем счетчики
-        $likeBtn.find('.like-count').text(data.likes_count);
-        $dislikeBtn.find('.dislike-count').text(data.dislikes_count);
-
-        // Обновляем рейтинг
-        if ($rating.length) {
-            $rating.text(data.rating);
+            return cloned;
         }
     },
 
-    // Обработка лайков цитат
-    handleQuoteLike(e) {
-        e.preventDefault();
-        const $btn = $(e.currentTarget);
-        const url = $btn.data('url');
-
-        if (!url) return;
-
-        $.post(url)
-            .done((data) => {
-                $btn.toggleClass('liked', data.liked);
-                $btn.find('.like-count').text(data.likes_count);
-
-                const $icon = $btn.find('i');
-                if (data.liked) {
-                    $icon.removeClass('far').addClass('fas');
-                } else {
-                    $icon.removeClass('fas').addClass('far');
-                }
-            })
-            .fail(() => {
-                Notifications.show('Ошибка при обработке лайка', 'error');
-            });
-    }
-};
-
-/**
- * Чат функциональность - ПЕРЕНЕСЕНА в chat.js
- * Используется ChatManager класс для современного управления чатом
- */
-
-/**
- * UI компоненты и эффекты
- */
-const UI = {
-    bindEvents() {
-        $(document).on('click', '.copy-to-clipboard', this.handleCopyToClipboard);
-        $(document).on('click', '.dark-mode-toggle', this.toggleDarkMode);
-        $(window).on('scroll', Utils.throttle(this.handleScroll.bind(this), 100));
-    },
-
-    // Инициализация тултипов
-    initTooltips() {
-        if (typeof bootstrap !== 'undefined') {
-            $('[data-bs-toggle="tooltip"]').tooltip();
+    /**
+     * Проверка поддержки localStorage
+     */
+    hasLocalStorage() {
+        try {
+            const test = '__test__';
+            localStorage.setItem(test, test);
+            localStorage.removeItem(test);
+            return true;
+        } catch {
+            return false;
         }
     },
 
-    // Ленивая загрузка изображений
-    initLazyLoading() {
-        if ('IntersectionObserver' in window) {
-            const imageObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const img = entry.target;
-                        img.src = img.dataset.src;
-                        img.classList.remove('lazy');
-                        imageObserver.unobserve(img);
-                    }
-                });
-            });
-
-            document.querySelectorAll('img[data-src]').forEach(img => {
-                imageObserver.observe(img);
-            });
+    /**
+     * Безопасное получение значения из localStorage
+     */
+    getLocalStorage(key, defaultValue = null) {
+        if (!this.hasLocalStorage()) return defaultValue;
+        
+        try {
+            const value = localStorage.getItem(key);
+            return value !== null ? JSON.parse(value) : defaultValue;
+        } catch {
+            return defaultValue;
         }
     },
 
-    // Темный режим
-    initDarkMode() {
-        if (localStorage.getItem('darkMode') === 'true') {
-            $('body').addClass('dark-mode');
+    /**
+     * Безопасное сохранение в localStorage
+     */
+    setLocalStorage(key, value) {
+        if (!this.hasLocalStorage()) return false;
+        
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+            return true;
+        } catch {
+            return false;
         }
-    },
-
-    toggleDarkMode() {
-        $('body').toggleClass('dark-mode');
-        localStorage.setItem('darkMode', $('body').hasClass('dark-mode'));
-    },
-
-    // Копирование в буфер обмена
-    handleCopyToClipboard(e) {
-        e.preventDefault();
-        const $btn = $(e.currentTarget);
-        const text = $btn.data('text') || $btn.text();
-
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(text).then(() => {
-                const originalText = $btn.text();
-                $btn.text('Скопировано!');
-                setTimeout(() => $btn.text(originalText), 2000);
-            });
-        }
-    },
-
-    // Анимации при прокрутке
-    initScrollAnimations() {
-        this.handleScroll();
-    },
-
-    handleScroll() {
-        $('.animate-on-scroll').each(function() {
-            const $element = $(this);
-            const elementTop = $element.offset().top;
-            const elementBottom = elementTop + $element.outerHeight();
-            const viewportTop = $(window).scrollTop();
-            const viewportBottom = viewportTop + $(window).height();
-
-            if (elementBottom > viewportTop && elementTop < viewportBottom) {
-                $element.addClass('animated');
-            }
-        });
     }
 };
 
 // Инициализация при загрузке DOM
-$(document).ready(() => {
+document.addEventListener('DOMContentLoaded', () => {
     ObsidianTime.init();
 });
 
-// Экспорт для возможного использования в других скриптах
+// Экспорт для глобального использования
 window.ObsidianTime = ObsidianTime;
 window.Utils = Utils;
-window.Notifications = Notifications; 
+
+// Для отладки в консоли
+if (typeof window !== 'undefined') {
+    window.debug = {
+        app: () => ObsidianTime.getInfo(),
+        enableDebug: () => ObsidianTime.setDebugMode(true),
+        disableDebug: () => ObsidianTime.setDebugMode(false),
+        modules: () => Array.from(ObsidianTime.state.activeModules),
+        features: () => ObsidianTime.features
+    };
+} 

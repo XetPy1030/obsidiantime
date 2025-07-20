@@ -148,10 +148,13 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Расширенная функциональность чата -->
-<script src="{% static 'js/chat.js' %}"></script>
+<!-- Конфигурация пользователя для чата -->
 <script>
-// Передаем имя пользователя для чата
-window.currentUser = '{{ user.username|escapejs }}';
+// Передаем данные пользователя для чата
+window.chatConfig = {
+    currentUser: '{{ user.username|escapejs }}',
+    isAuthenticated: {{ user.is_authenticated|yesno:"true,false" }},
+    csrfToken: '{{ csrf_token }}'
+};
 </script>
 {% endblock %} 

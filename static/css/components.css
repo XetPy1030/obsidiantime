@@ -1,6 +1,166 @@
 /* ObsidianTime - Components CSS */
 
 /* ==========================================================================
+   НАВИГАЦИЯ И АКТИВНЫЕ СОСТОЯНИЯ
+   ========================================================================== */
+
+/* Исключаем логотип из активных состояний */
+.navbar-brand {
+    transition: all 0.3s ease;
+    font-weight: 600;
+    position: relative;
+}
+
+.navbar-brand:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+    text-decoration: none;
+}
+
+.navbar-brand:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+}
+
+/* Анимация для иконки в логотипе */
+.navbar-brand .obsidian-icon {
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover .obsidian-icon {
+    transform: rotate(5deg);
+}
+
+/* Убираем активные стили с логотипа */
+.navbar-brand.active {
+    background-color: transparent !important;
+    color: inherit !important;
+}
+
+.navbar-brand.active::after {
+    display: none !important;
+}
+
+/* Активные состояния навигации (исключаем логотип) */
+.navbar-nav .nav-link.active:not(.navbar-brand) {
+    color: #fff !important;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    font-weight: 600;
+    position: relative;
+}
+
+.navbar-nav .nav-link.active:not(.navbar-brand)::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 2px;
+    background-color: #fff;
+    border-radius: 1px;
+}
+
+/* Dropdown элементы */
+.navbar-nav .dropdown-toggle.active {
+    color: #fff !important;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.navbar-nav .dropdown-toggle.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 2px;
+    background-color: #fff;
+    border-radius: 1px;
+}
+
+/* Hover эффекты для навигации (исключаем логотип) */
+.navbar-nav .nav-link:hover:not(.active):not(.navbar-brand) {
+    color: rgba(255, 255, 255, 0.8) !important;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.navbar-nav .dropdown-toggle:hover:not(.active) {
+    color: rgba(255, 255, 255, 0.8) !important;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+/* Пробелы между элементами навигации */
+.navbar-nav .nav-item {
+    margin-right: 0.5rem;
+}
+
+.navbar-nav .nav-item:last-child {
+    margin-right: 0;
+}
+
+/* Дополнительные пробелы для dropdown элементов */
+.navbar-nav .nav-item.dropdown {
+    margin-right: 0.75rem;
+}
+
+/* Пробелы между группами навигации */
+.navbar-nav + .navbar-nav {
+    margin-left: 1rem;
+}
+
+/* Dropdown меню */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    padding: 0.5rem 0;
+    margin-top: 0.5rem;
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    margin: 0 0.5rem;
+}
+
+.dropdown-item:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateX(5px);
+}
+
+.dropdown-item.active {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+}
+
+/* Анимации для dropdown */
+.dropdown-menu.show {
+    animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================================================
    УВЕДОМЛЕНИЯ
    ========================================================================== */
 
@@ -546,4 +706,446 @@
 
 .upload-guidelines li {
     margin-bottom: 0.25rem;
+}
+
+/* ==========================================================================
+   НОВЫЕ МОДУЛИ
+   ========================================================================== */
+
+/* Контейнер уведомлений */
+.notifications-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1050;
+    max-width: 400px;
+    pointer-events: none;
+}
+
+.notification {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    margin-bottom: 12px;
+    padding: 0;
+    border: none;
+    overflow: hidden;
+    animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+    max-width: 100%;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notification.hide {
+    opacity: 0;
+    transform: translateX(100%);
+}
+
+.notification-content {
+    padding: 16px;
+}
+
+.notification-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.notification-icon {
+    font-size: 18px;
+    font-weight: bold;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.notification-message {
+    flex: 1;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.notification-close:hover {
+    background: rgba(0,0,0,0.1);
+    color: #333;
+}
+
+.notification-actions {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Типы уведомлений */
+.notification.success {
+    border-left: 4px solid var(--success-color);
+}
+
+.notification.success .notification-icon {
+    color: var(--success-color);
+}
+
+.notification.error {
+    border-left: 4px solid var(--danger-color);
+}
+
+.notification.error .notification-icon {
+    color: var(--danger-color);
+}
+
+.notification.warning {
+    border-left: 4px solid var(--warning-color);
+}
+
+.notification.warning .notification-icon {
+    color: var(--warning-color);
+}
+
+.notification.info {
+    border-left: 4px solid var(--info-color);
+}
+
+.notification.info .notification-icon {
+    color: var(--info-color);
+}
+
+/* Кнопка прокрутки наверх */
+.scroll-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.scroll-to-top.show {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+}
+
+.scroll-to-top:hover {
+    background: var(--primary-dark, #0056b3);
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+/* Индикаторы валидации форм */
+.validation-feedback {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.validation-feedback.valid {
+    color: var(--success-color);
+}
+
+.validation-feedback.invalid {
+    color: var(--danger-color);
+}
+
+/* Счетчик символов */
+.character-counter {
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-align: right;
+    margin-top: 0.25rem;
+}
+
+.character-counter.warning {
+    color: var(--warning-color);
+}
+
+.character-counter.error {
+    color: var(--danger-color);
+}
+
+/* Индикатор автосохранения */
+.auto-save-indicator {
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.auto-save-indicator.success {
+    color: var(--success-color);
+}
+
+.auto-save-indicator.error {
+    color: var(--danger-color);
+}
+
+/* Превью файлов */
+.preview-container {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+}
+
+.preview-image {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent, rgba(0,0,0,0.7));
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.preview-container:hover .preview-overlay {
+    opacity: 1;
+}
+
+.preview-info {
+    color: white;
+    font-size: 0.75rem;
+}
+
+.file-name {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.file-size {
+    opacity: 0.8;
+}
+
+.btn-remove-preview {
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    align-self: flex-end;
+    transition: background 0.2s ease;
+}
+
+.btn-remove-preview:hover {
+    background: rgba(220, 53, 69, 1);
+}
+
+/* Файловые элементы */
+.files-preview {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px;
+    background: #f8f9fa;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.file-item:last-child {
+    margin-bottom: 0;
+}
+
+.file-item i {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.file-info {
+    flex: 1;
+}
+
+.file-name {
+    font-weight: 500;
+    display: block;
+}
+
+.file-size {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+/* Анимации прокрутки */
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s ease;
+}
+
+.animate-on-scroll.animated {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Фокус для доступности */
+.focused {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Skip link */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: var(--primary-color);
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 0 0 4px 4px;
+    z-index: 1060;
+    transition: top 0.3s ease;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* Загрузка приложения */
+body:not(.app-loaded) {
+    overflow: hidden;
+}
+
+.preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.3s ease;
+}
+
+.preloader .spinner {
+    width: 40px;
+    height: 40px;
+}
+
+/* Responsive для уведомлений */
+@media (max-width: 768px) {
+    .notifications-container {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+        top: 70px;
+    }
+    
+    .scroll-to-top {
+        width: 45px;
+        height: 45px;
+        bottom: 20px;
+        right: 20px;
+    }
+} 
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 991.98px) {
+    .navbar-nav .nav-item {
+        margin-right: 0;
+        margin-bottom: 0.25rem;
+    }
+    
+    .navbar-nav .nav-item.dropdown {
+        margin-right: 0;
+    }
+    
+    .navbar-nav + .navbar-nav {
+        margin-left: 0;
+        margin-top: 0.5rem;
+    }
+    
+    /* Улучшенная навигация для мобильных */
+    .navbar-collapse {
+        padding-top: 1rem;
+    }
+    
+    .navbar-nav .nav-link {
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        margin-bottom: 0.25rem;
+    }
+    
+    .navbar-nav .dropdown-toggle {
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        margin-bottom: 0.25rem;
+    }
+    
+    .dropdown-menu {
+        border: none;
+        box-shadow: none;
+        background-color: rgba(255, 255, 255, 0.05);
+        margin-top: 0;
+        padding: 0.5rem 0;
+    }
+    
+    .dropdown-item {
+        color: rgba(255, 255, 255, 0.8);
+        padding: 0.5rem 1.5rem;
+        margin: 0;
+        border-radius: 0;
+    }
+    
+    .dropdown-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+        transform: none;
+    }
+    
+    .dropdown-item.active {
+        background-color: rgba(255, 255, 255, 0.15);
+        color: white;
+    }
 } 
