@@ -178,6 +178,13 @@ def vote_poll(request, poll_id, option_id):
     else:
         voted = True
 
+    # Получаем информацию о том, за какие варианты пользователь проголосовал
+    user_voted_options = set(
+        PollVote.objects.filter(user=request.user, option__poll=poll).values_list(
+            "option_id", flat=True
+        )
+    )
+
     # Возвращаем обновленную статистику
     poll_data = {"voted": voted, "total_votes": poll.total_votes, "options": []}
 
@@ -187,6 +194,8 @@ def vote_poll(request, poll_id, option_id):
                 "id": opt.id,
                 "vote_count": opt.vote_count,
                 "vote_percentage": opt.vote_percentage,
+                "user_voted": opt.id
+                in user_voted_options,  # Добавляем информацию о голосе пользователя
             }
         )
 

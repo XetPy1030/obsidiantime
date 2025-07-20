@@ -411,7 +411,7 @@ $(document).ready(function() {
             `;
             
             message.poll.options.forEach(function(option) {
-                const votedClass = option.voted ? 'voted' : '';
+                const votedClass = option.user_voted ? 'voted' : '';
                 messageHtml += `
                     <div class="poll-option ${votedClass}" data-option-id="${option.id}" data-poll-id="${message.poll.id}">
                         <div class="d-flex justify-content-between">
@@ -480,8 +480,8 @@ $(document).ready(function() {
             const progressBar = optionElement.find('.poll-progress-bar');
             progressBar.css('width', option.vote_percentage + '%');
             
-            // Обновляем класс voted
-            if (data.voted) {
+            // Правильно обновляем класс voted для каждого варианта
+            if (option.user_voted) {
                 optionElement.addClass('voted');
             } else {
                 optionElement.removeClass('voted');
