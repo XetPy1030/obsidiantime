@@ -17,46 +17,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    
-    <!-- Стили для фиксированных уведомлений -->
-    <style>
-    .notifications-container {
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        z-index: 1050;
-        max-width: 400px;
-    }
-
-    .notification {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        margin-bottom: 10px;
-        padding: 15px;
-        border-left: 4px solid;
-        animation: slideInRight 0.3s ease-out;
-    }
-
-    .notification.success { border-left-color: #28a745; }
-    .notification.error { border-left-color: #dc3545; }
-    .notification.warning { border-left-color: #ffc107; }
-    .notification.info { border-left-color: #17a2b8; }
-
-    @keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-
-    /* Адаптивность для уведомлений */
-    @media (max-width: 768px) {
-        .notifications-container {
-            right: 10px;
-            left: 10px;
-            max-width: none;
-        }
-    }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
     
     {% block extra_css %}{% endblock %}
 </head>
@@ -172,7 +133,7 @@
                                 {{ message }}
                             </strong>
                         </div>
-                        <button type="button" class="btn-close" onclick="$(this).parent().parent().remove()"></button>
+                        <button type="button" class="btn-close" onclick="this.closest('.notification').remove()"></button>
                     </div>
                 </div>
             {% endfor %}
@@ -236,18 +197,7 @@
     <!-- Custom JS -->
     <script src="{% static 'js/main.js' %}"></script>
     
-    <!-- Скрипт для автоматического скрытия уведомлений -->
-    <script>
-    $(document).ready(function() {
-        // Автоматически скрываем уведомления через 5 секунд
-        $('.notification').each(function() {
-            const notification = $(this);
-            setTimeout(function() {
-                notification.fadeOut(() => notification.remove());
-            }, 5000);
-        });
-    });
-    </script>
+    <!-- Скрипт для автоматического скрытия уведомлений встроен в main.js -->
     
     {% block extra_js %}{% endblock %}
 </body>

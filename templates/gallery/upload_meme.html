@@ -114,49 +114,13 @@
     </div>
 </div>
 
-<style>
-.image-preview-area {
-    background: #f8f9fa;
-    transition: all 0.3s ease;
-    min-height: 300px;
-    display: flex;
-    align-items: center;
-}
+<!-- Стили загрузки теперь в components.css -->
+{% endblock %}
 
-.image-preview-area.has-image {
-    background: white;
-}
-
-.preview-image {
-    max-width: 100%;
-    max-height: 300px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.format-example {
-    border-radius: 10px;
-    transition: all 0.3s ease;
-    background: #f8f9fa;
-}
-
-.format-example:hover {
-    background: #e9ecef;
-    transform: translateY(-2px);
-}
-
-.upload-guidelines ul {
-    padding-left: 1.2rem;
-}
-
-.upload-guidelines li {
-    margin-bottom: 0.25rem;
-}
-</style>
-
+{% block extra_js %}
 <script>
 $(document).ready(function() {
-    // Предпросмотр изображения
+    // Расширенный предпросмотр изображения для загрузки мемов
     $('input[type="file"]').on('change', function(e) {
         const file = e.target.files[0];
         const previewArea = $('.image-preview-area');
@@ -169,24 +133,21 @@ $(document).ready(function() {
                 previewArea.html(`
                     <img src="${e.target.result}" class="preview-image" alt="Предпросмотр">
                 `);
+                
+                // Показываем информацию о файле
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                const fileInfo = `
+                    <div class="mt-2 small text-muted file-info">
+                        <i class="fas fa-file-image"></i> ${file.name}<br>
+                        <i class="fas fa-weight-hanging"></i> ${fileSize} MB
+                    </div>
+                `;
+                
+                $('.file-info').remove();
+                $('.preview-container').append(fileInfo);
             };
             
             reader.readAsDataURL(file);
-            
-            // Показываем информацию о файле
-            const fileSize = (file.size / 1024 / 1024).toFixed(2);
-            const fileInfo = `
-                <div class="mt-2 small text-muted">
-                    <i class="fas fa-file-image"></i> ${file.name}<br>
-                    <i class="fas fa-weight-hanging"></i> ${fileSize} MB
-                </div>
-            `;
-            
-            if (!$('.file-info').length) {
-                $('.preview-container').append(`<div class="file-info">${fileInfo}</div>`);
-            } else {
-                $('.file-info').html(fileInfo);
-            }
         } else {
             // Сброс предпросмотра
             previewArea.removeClass('has-image');
@@ -201,22 +162,29 @@ $(document).ready(function() {
     });
     
     // Drag & Drop поддержка
-    $('.image-preview-area').on('dragover', function(e) {
+    const $previewArea = $('.image-preview-area');
+    
+    $previewArea.on('dragover dragenter', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         $(this).addClass('border-primary');
     });
     
-    $('.image-preview-area').on('dragleave', function(e) {
+    $previewArea.on('dragleave', function(e) {
         e.preventDefault();
-        $(this).removeClass('border-primary');
+        e.stopPropagation();
+        if (!$(this).is(e.target) && !$.contains(this, e.target)) {
+            $(this).removeClass('border-primary');
+        }
     });
     
-    $('.image-preview-area').on('drop', function(e) {
+    $previewArea.on('drop', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         $(this).removeClass('border-primary');
         
         const files = e.originalEvent.dataTransfer.files;
-        if (files.length > 0) {
+        if (files.length > 0 && files[0].type.startsWith('image/')) {
             $('input[type="file"]')[0].files = files;
             $('input[type="file"]').trigger('change');
         }
