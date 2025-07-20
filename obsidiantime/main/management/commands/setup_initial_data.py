@@ -75,7 +75,7 @@ class Command(BaseCommand):
             {
                 "platform": "telegram",
                 "title": "ObsidianTime в Telegram",
-                "url": "https://t.me/obsidiantime",
+                "url": "https://t.me/obsitgroup",
                 "description": "Новости и обсуждения",
                 "order": 3,
             },

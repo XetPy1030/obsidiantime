@@ -1,9 +1,16 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
 
-from .models import Quote, QuoteLike, SiteSettings, SocialLink
+from .models import Quote, SocialLink
 
-# Constants
+# Константы для админки
+URL_PREVIEW_LENGTH = 40
+URL_PREVIEW_TRUNCATE = 37
+DESCRIPTION_PREVIEW_LENGTH = 50
+DESCRIPTION_PREVIEW_TRUNCATE = 47
 TEXT_PREVIEW_LENGTH = 100
+TEXT_PREVIEW_TRUNCATE = 97
 
 
 @admin.register(Quote)
@@ -12,68 +19,107 @@ class QuoteAdmin(admin.ModelAdmin):
         "text_preview",
         "author",
         "added_by",
-        "likes_count",
         "views",
-        "is_approved",
+        "likes_count",
         "created_at",
+        "get_actions",
     ]
-    list_filter = ["is_approved", "created_at", "added_by"]
+    list_filter = ["created_at", "added_by"]
     search_fields = ["text", "author", "added_by__username"]
-    readonly_fields = ["created_at", "views"]
-    list_editable = ["is_approved"]
+    readonly_fields = ["views", "likes_count", "created_at"]
+    date_hierarchy = "created_at"
+
+    fieldsets = (
+        (
+            "Основная информация",
+            {
+                "fields": ("text", "author"),
+            },
+        ),
+        (
+            "Метаданные",
+            {
+                "fields": ("added_by", "views", "likes_count"),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "Временные метки",
+            {
+                "fields": ("created_at",),
+                "classes": ("collapse",),
+            },
+        ),
+    )
 
     def text_preview(self, obj):
-        text = obj.text
-        if len(text) > TEXT_PREVIEW_LENGTH:
-            return text[:TEXT_PREVIEW_LENGTH] + "..."
-        return text
+        """Показывает сокращенный текст цитаты"""
+        if len(obj.text) > TEXT_PREVIEW_LENGTH:
+            return f"{obj.text[:TEXT_PREVIEW_TRUNCATE]}..."
+        return obj.text
 
     text_preview.short_description = "Текст цитаты"
 
-    def likes_count(self, obj):
-        return obj.likes_count
+    def get_actions(self, obj):
+        """Показывает кнопки действий"""
+        view_url = reverse("admin:main_quote_change", args=[obj.pk])
+        return format_html(
+            '<a class="button" href="{}">Редактировать</a>',
+            view_url,
+        )
 
-    likes_count.short_description = "Лайки"
+    get_actions.short_description = "Действия"
 
-
-@admin.register(QuoteLike)
-class QuoteLikeAdmin(admin.ModelAdmin):
-    list_display = ["user", "quote_preview", "created_at"]
-    list_filter = ["created_at"]
-    search_fields = ["user__username", "quote__text", "quote__author"]
-    readonly_fields = ["created_at"]
-
-    def quote_preview(self, obj):
-        return f'"{obj.quote.text[:50]}..." - {obj.quote.author}'
-
-    quote_preview.short_description = "Цитата"
+    def save_model(self, request, obj, form, change):
+        if not change:  # Если это новая запись
+            obj.added_by = request.user
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(SocialLink)
 class SocialLinkAdmin(admin.ModelAdmin):
-    list_display = ["title", "platform", "url", "is_active", "order"]
-    list_filter = ["platform", "is_active"]
-    search_fields = ["title", "description"]
-    list_editable = ["is_active", "order"]
-    ordering = ["order", "title"]
+    list_display = [
+        "title",
+        "url_preview",
+        "icon_class",
+        "is_active",
+        "order",
+        "get_actions",
+    ]
+    list_filter = ["is_active", "order"]
+    search_fields = ["title", "url"]
+    list_editable = ["order", "is_active"]
+    ordering = ["order"]
 
+    fieldsets = (
+        (
+            "Основная информация",
+            {
+                "fields": ("title", "url", "icon_class"),
+            },
+        ),
+        (
+            "Настройки",
+            {
+                "fields": ("is_active", "order"),
+            },
+        ),
+    )
 
-@admin.register(SiteSettings)
-class SiteSettingsAdmin(admin.ModelAdmin):
-    list_display = ["site_title", "show_rickroll", "has_video"]
-    fields = ["site_title", "site_description", "rickroll_video", "show_rickroll"]
+    def url_preview(self, obj):
+        """Показывает сокращенную ссылку"""
+        if len(obj.url) > URL_PREVIEW_LENGTH:
+            return f"{obj.url[:URL_PREVIEW_TRUNCATE]}..."
+        return obj.url
 
-    def has_add_permission(self, request):
-        # Разрешаем добавление только если настроек еще нет
-        return not SiteSettings.objects.exists()
+    url_preview.short_description = "URL"
 
-    def has_delete_permission(self, request, obj=None):
-        # Запрещаем удаление настроек
-        return False
+    def get_actions(self, obj):
+        """Показывает кнопки действий"""
+        view_url = reverse("admin:main_sociallink_change", args=[obj.pk])
+        return format_html(
+            '<a class="button" href="{}">Редактировать</a>',
+            view_url,
+        )
 
-    def has_video(self, obj):
-        """Показывает есть ли загруженное видео"""
-        return bool(obj.rickroll_video)
-
-    has_video.boolean = True
-    has_video.short_description = "Видео загружено"
+    get_actions.short_description = "Действия"

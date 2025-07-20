@@ -14,13 +14,12 @@ from obsidiantime.chat.models import Message
 from obsidiantime.gallery.models import Meme
 
 from .forms import QuoteFilterForm, QuoteForm
-from .models import Quote, QuoteLike, SiteSettings, SocialLink
+from .models import Quote, QuoteLike, SiteSettings
 
 
 def home(request):
     """Главная страница с рикроллом и чатом"""
     settings = SiteSettings.get_settings()
-    social_links = SocialLink.objects.filter(is_active=True)
 
     # Последние сообщения из чата для главной страницы
     latest_messages = Message.objects.select_related("author").order_by("-created_at")[
@@ -29,7 +28,6 @@ def home(request):
 
     context = {
         "settings": settings,
-        "social_links": social_links,
         "latest_messages": latest_messages,
     }
     return render(request, "main/home.html", context)
@@ -154,7 +152,6 @@ def about(request):
     """Страница о проекте"""
 
     settings = SiteSettings.get_settings()
-    social_links = SocialLink.objects.filter(is_active=True)
 
     # Статистика
     users_count = User.objects.count()
@@ -164,7 +161,6 @@ def about(request):
 
     context = {
         "settings": settings,
-        "social_links": social_links,
         "users_count": users_count,
         "messages_count": messages_count,
         "memes_count": memes_count,

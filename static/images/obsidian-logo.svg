@@ -1,0 +1,47 @@
+<svg width="32" height="30" viewBox="0 0 32 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+	<defs>
+		<!-- Градиент для основания (треугольника) -->
+		<linearGradient id="baseGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+			<stop offset="0%" style="stop-color:#b117e9;stop-opacity:1" />
+			<stop offset="100%" style="stop-color:#4503a1;stop-opacity:1" />
+		</linearGradient>
+		<!-- Фильтр для эффекта света на букве T -->
+		<filter id="lightEffect" x="-50%" y="-50%" width="200%" height="200%">
+			<feGaussianBlur stdDeviation="1" result="coloredBlur" />
+			<feFlood flood-color="#f7f2f8" flood-opacity="0.8" />
+			<feComposite in="SourceGraphic" in2="coloredBlur" operator="over" />
+		</filter>
+		<!-- Тень -->
+		<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+			<feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.3" />
+		</filter>
+		<!-- Яркое свечение для T -->
+		<filter id="brightGlow" x="-50%" y="-50%" width="200%" height="200%">
+			<feGaussianBlur stdDeviation="2" result="coloredBlur" />
+			<feMerge>
+				<feMergeNode in="coloredBlur" />
+				<feMergeNode in="SourceGraphic" />
+			</feMerge>
+		</filter>
+	</defs>
+	<!-- Слой 1: Широкий округлый треугольник с изогнутыми сторонами -->
+	<g filter="url(#shadow)">
+		<path d="M16 1C16 1 7 3 4 22 4 22 10 22 12 26L13 25C13 25 11 22 7 21 7 21 12 4 16 10 16 10 20 4 25 21 25 21 21 22 19 25L20 26C20 26 22 22 28 22 28 22 25 3 16 1Z" fill="url(#baseGradient)" stroke="#2a2a2a" stroke-width="0.6" stroke-linejoin="round" />
+	</g>
+	<!-- Слой 2: Более вытянутая и заметная буква O -->
+	<path d="M13 6h6a2.5 2.5 0 0 1 2.5 2.5v12a2.5 2.5 0 0 1-2.5 2.5h-6a2.5 2.5 0 0 1-2.5-2.5v-12a2.5 2.5 0 0 1 2.5-2.5zM12 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5z" fill="#da28ee" fill-rule="evenodd" />
+	<!-- Слой 3: Более вытянутая буква T в центре с эффектом света -->
+	<g filter="url(#brightGlow)">
+		<!-- Горизонтальная перекладина T (более широкая) -->
+		<path d="M8 3l16 0-2 1.5-12 0z" fill="#f7f2f8" opacity="0.98" />
+		<!-- Вертикальная стойка T (более длинная) -->
+		<path d="M14 4 18 4 17 24 16 25 15 24Z" fill="#f7f2f8" opacity="0.98" />
+	</g>
+	<!-- Дополнительные блики (меньше, чтобы не мешать) -->
+	<ellipse cx="12" cy="4" rx="1.5" ry="0.8" opacity="0.4" />
+	<ellipse cx="20" cy="18" rx="0.8" ry="1.2" opacity="0.3" />
+	<!-- Акцентные точки на углах (меньше) -->
+	<circle cx="16" cy="3" r="0.8" opacity="0.3" />
+	<circle cx="8" cy="28" r="0.6" opacity="0.2" />
+	<circle cx="24" cy="28" r="0.6" opacity="0.2" />
+</svg>

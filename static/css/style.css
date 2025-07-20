@@ -1,8 +1,10 @@
 /* ObsidianTime Custom Styles */
 
 :root {
-    --primary-color: #0d6efd;
-    --secondary-color: #6c757d;
+    /* --primary-color: #0d6efd; */
+    /* --secondary-color: #6c757d; */
+    --primary-color: #9e00db;
+    --secondary-color: #e73793;
     --success-color: #198754;
     --warning-color: #ffc107;
     --danger-color: #dc3545;
@@ -49,6 +51,17 @@ body {
     padding: 0.5rem 1.5rem;
     font-weight: 500;
     transition: all 0.3s ease;
+}
+
+/* Исправление видимости текста на кнопке "Фильтровать" */
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: #fff;
 }
 
 .btn:hover {
@@ -248,19 +261,61 @@ body {
 }
 
 /* Social Links */
+.social-links {
+    min-height: 40px; /* Обеспечиваем минимальную высоту даже если ссылок нет */
+}
+
 .social-links a {
     font-size: 1.5rem;
     transition: all 0.3s ease;
+    margin-right: 0.75rem;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .social-links a:hover {
     transform: scale(1.2);
     color: var(--warning-color) !important;
+    text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+}
+
+.social-links a:last-child {
+    margin-right: 0;
 }
 
 /* Footer */
 footer {
     margin-top: auto;
+    /*background: linear-gradient(135deg, #212529, #343a40) !important;*/
+    /*border-top: 3px solid var(--primary-color);*/
+    /*position: relative;*/
+}
+
+footer::before {
+    /* content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); */
+}
+
+/* Footer адаптивность */
+@media (max-width: 768px) {
+    .social-links a {
+        font-size: 1.3rem;
+        margin-right: 0.5rem;
+    }
+    
+    footer h5,
+    footer h6 {
+        font-size: 1rem;
+    }
+    
+    footer p {
+        font-size: 0.9rem;
+    }
 }
 
 /* Animations */
@@ -340,4 +395,214 @@ html {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #a1a1a1;
+} 
+
+/* Кастомная иконка ObsidianTime */
+.obsidian-icon {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.125em;
+    background-image: url('../images/obsidian-logo.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Анимация для иконки */
+.obsidian-icon.animated {
+    animation: obsidianPulse 2s ease-in-out infinite;
+}
+
+@keyframes obsidianPulse {
+    0%, 100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+    50% {
+        transform: scale(1.1);
+        filter: brightness(1.2);
+    }
+}
+
+/* Размеры иконки для разных контекстов */
+.obsidian-icon.lg {
+    width: 1.5em;
+    height: 1.5em;
+}
+
+.obsidian-icon.xl {
+    width: 2em;
+    height: 2em;
+}
+
+/* Стили для navbar логотипа */
+.navbar-brand .obsidian-icon {
+    margin-right: 0.5rem;
+}
+
+/* Стили для footer логотипа */
+.footer-logo .obsidian-icon {
+    margin-right: 0.5rem;
+    filter: brightness(1.2);
+}
+
+/* Hover эффект для ссылок с иконкой */
+a:hover .obsidian-icon {
+    animation: obsidianPulse 1s ease-in-out;
+}
+
+/* Дополнительные стили для мемов и чата */
+.meme-card {
+    transition: all 0.3s ease;
+}
+
+.meme-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.reaction-btn {
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.reaction-btn:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.reaction-btn.liked {
+    color: #28a745;
+}
+
+.reaction-btn.disliked {
+    color: #dc3545;
+}
+
+/* Анимации для уведомлений */
+.alert {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Стили для видео */
+video {
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили для чата */
+.message-item {
+    transition: background-color 0.2s ease;
+}
+
+.message-item:hover {
+    background-color: rgba(0,0,0,0.05);
+}
+
+/* Стили для статистики */
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+} 
+
+/* Темный режим для иконки */
+@media (prefers-color-scheme: dark) {
+    .obsidian-icon {
+        filter: brightness(1.2) contrast(1.1);
+    }
+    
+    .obsidian-icon.animated {
+        filter: brightness(1.2) contrast(1.1);
+    }
+    
+    .obsidian-icon.animated:hover {
+        filter: brightness(1.4) contrast(1.2);
+    }
+}
+
+/* Responsive размеры иконки */
+@media (max-width: 768px) {
+    .obsidian-icon.xl {
+        width: 1.5em;
+        height: 1.5em;
+    }
+    
+    .navbar-brand .obsidian-icon {
+        width: 1.2em;
+        height: 1.2em;
+    }
+}
+
+/* Альтернативные цветовые схемы для иконки */
+.obsidian-icon.light {
+    filter: brightness(1.3) saturate(0.8);
+}
+
+.obsidian-icon.dark {
+    filter: brightness(0.8) saturate(1.2) contrast(1.1);
+}
+
+/* Эффект загрузки для иконки */
+.obsidian-icon.loading {
+    animation: obsidianSpin 1s linear infinite;
+}
+
+@keyframes obsidianSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Стили для разных состояний */
+.obsidian-icon.success {
+    filter: hue-rotate(90deg) brightness(1.1);
+}
+
+.obsidian-icon.warning {
+    filter: hue-rotate(45deg) brightness(1.2);
+}
+
+.obsidian-icon.error {
+    filter: hue-rotate(0deg) brightness(1.1) saturate(1.3);
+}
+
+/* Градиентный фон для карточек с иконкой */
+.icon-card {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.icon-card:hover {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
 } 

@@ -1,0 +1,77 @@
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="baseGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#b117e9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4503a1;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Фильтр свечения для T -->
+    <filter id="brightGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Слой 1: Широкий округлый треугольник -->
+  <path d="M8 0.5 
+           C8 0.5, 6 4, 4 7.5
+           C3 9, 2 11, 1.5 14
+           C1.2 15, 2 15, 3.5 15
+           L5.5 15
+           C6.5 14, 7 13, 8 12
+           C9 13, 9.5 14, 10.5 15
+           L12.5 15
+           C14 15, 14.8 15, 14.5 14
+           C14 11, 13 9, 12 7.5
+           C10 4, 8 0.5, 8 0.5 Z" 
+        fill="url(#baseGradient)" 
+        stroke="#333" 
+        stroke-width="0.3"/>
+  
+  <!-- Слой 2: Более вытянутая и заметная буква O -->
+  <rect x="5.5" y="5.5" width="5" height="7" 
+        rx="1.2" ry="1.2" 
+        fill="#da28ee" 
+        opacity="1.0"
+        stroke="rgba(255,255,255,0.3)" 
+        stroke-width="0.3"/>
+  
+  <!-- Отверстие внутри O - более вытянутое -->
+  <rect x="6.7" y="7" width="2.6" height="4" 
+        rx="0.6" ry="0.6" 
+        fill="rgba(0,0,0,0)"
+        stroke="rgba(0,0,0,0.8)" 
+        stroke-width="0.8"
+        opacity="1"/>
+  
+  <!-- Слой 3: Более вытянутая буква T в центре с эффектом света -->
+  <g filter="url(#brightGlow)">
+    <!-- Горизонтальная перекладина T (более широкая) -->
+    <path d="M3.5 6.5 L4.5 5.5 L11.5 5.5 L12.5 6.5 L10.5 7.5 L5.5 7.5 Z" 
+          fill="#f7f2f8" 
+          opacity="0.98"/>
+    
+    <!-- Вертикальная стойка T (более длинная) -->
+    <path d="M7 6.5 L9 6.5 L8.7 13 L8 14 L7.3 13 Z" 
+          fill="#f7f2f8" 
+          opacity="0.98"/>
+  </g>
+  
+  <!-- Дополнительный световой эффект -->
+  <g opacity="0.8">
+    <path d="M3.5 6.5 L4.5 5.5 L11.5 5.5 L12.5 6.5 L10.5 7.5 L5.5 7.5 Z" 
+          fill="none" 
+          stroke="#ffffff" 
+          stroke-width="0.4"/>
+    <path d="M7 6.5 L9 6.5 L8.7 13 L8 14 L7.3 13 Z" 
+          fill="none" 
+          stroke="#ffffff" 
+          stroke-width="0.4"/>
+  </g>
+  
+  <!-- Блик -->
+  <circle cx="8" cy="2" r="0.3" fill="rgba(255,255,255,0.4)" opacity="0.3"/>
+</svg> 

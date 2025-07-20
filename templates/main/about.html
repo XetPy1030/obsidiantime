@@ -10,7 +10,7 @@
             <!-- Hero Section -->
             <div class="card shadow-lg mb-5">
                 <div class="card-header bg-primary text-white text-center">
-                    <h1><i class="fas fa-rocket"></i> {{ settings.site_title }}</h1>
+                    <h1><span class="obsidian-icon xl animated"></span> {{ settings.site_title }}</h1>
                     <p class="mb-0 lead">{{ settings.site_description }}</p>
                 </div>
                 <div class="card-body">
@@ -92,7 +92,7 @@
             {% endif %}
 
             <!-- Технические детали -->
-            <div class="card mb-5">
+            {% comment %} <div class="card mb-5">
                 <div class="card-header">
                     <h3><i class="fas fa-cogs"></i> Технологии</h3>
                 </div>
@@ -118,7 +118,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> {% endcomment %}
 
             <!-- Статистика -->
             <div class="card mb-5">
@@ -217,9 +217,7 @@
                     
                     <div class="text-center">
                         <small class="text-muted">
-                            © 2025 ObsidianTime. Сделано с ❤️ на Django.
-                            <br>
-                            Версия: 1.0.0 | Открытый исходный код
+                            © 2025 ObsidianTime. Сделано с ❤️ Имперцам.
                         </small>
                     </div>
                 </div>

@@ -82,14 +82,18 @@ class QuoteFilterForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_method = "get"
+
+        # Скрываем стандартные английские подписи
+        for field_name in self.fields:
+            self.fields[field_name].label = ""
+
+        # Обновлённый макет с более широким полем поиска и заметной кнопкой
         self.helper.layout = Layout(
             Div(
-                Field("search", wrapper_class="col-md-4"),
+                Field("search", wrapper_class="col-md-5"),
                 Field("sort", wrapper_class="col-md-3"),
-                Field("author", wrapper_class="col-md-3"),
-                Submit(
-                    "submit", "Фильтр", css_class="btn btn-outline-primary col-md-2"
-                ),
-                css_class="row",
+                Field("author", wrapper_class="col-md-2"),
+                Submit("submit", "Фильтровать", css_class="btn btn-primary col-md-2"),
+                css_class="row g-2",
             )
         )
