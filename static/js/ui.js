@@ -18,7 +18,7 @@ const UI_CONFIG = {
 const UI_SELECTORS = {
     darkModeToggle: '.dark-mode-toggle',
     copyToClipboard: '.copy-to-clipboard',
-    smoothScrollLink: 'a[href^="#"]',
+    smoothScrollLink: 'a[href^="#"]:not([href="#"])',
     animateOnScroll: '.animate-on-scroll',
     tooltip: '[data-bs-toggle="tooltip"]',
     dropdown: '.dropdown-toggle',
@@ -416,11 +416,37 @@ class UIManager {
      * Обработка плавной прокрутки
      */
     handleSmoothScroll(event) {
-        const target = document.querySelector(event.target.getAttribute('href'));
+        const href = event.target.getAttribute('href');
         
-        if (target) {
-            event.preventDefault();
-            this.scrollToElement(target);
+        // Проверяем, что href не пустой и не равен "#"
+        if (!href || href === '#' || href === '#') {
+            return;
+        }
+        
+        // Если это якорная ссылка (начинается с #)
+        if (href.startsWith('#')) {
+            // Дополнительная проверка - исключаем пустые якоря
+            const anchorId = href.substring(1);
+            if (!anchorId) {
+                return;
+            }
+            
+            const target = document.querySelector(href);
+            if (target) {
+                event.preventDefault();
+                this.scrollToElement(target);
+            } else {
+                console.warn(`Target element not found for anchor: ${href}`);
+            }
+        }
+        // Если это внешняя ссылка, не обрабатываем
+        else if (href.startsWith('http') || href.startsWith('//')) {
+            return;
+        }
+        // Для внутренних ссылок можно добавить дополнительную логику
+        else {
+            // Обрабатываем внутренние ссылки если нужно
+            console.log('Internal link clicked:', href);
         }
     }
 
