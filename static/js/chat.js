@@ -1,151 +1,290 @@
 // ObsidianTime - Chat Enhanced JavaScript
 
 /**
- * Расширенная функциональность чата
+ * Конфигурация чата
  */
-const ChatEnhanced = {
-    config: {
-        refreshInterval: 3000,
-        loadMoreBatchSize: 20
-    },
+const CHAT_CONFIG = {
+    refreshInterval: 3000,
+    loadMoreBatchSize: 20,
+    apiEndpoints: {
+        messages: '/chat/api/messages/',
+        sendMessage: '/chat/send-message/',
+        createPoll: '/chat/create-poll/'
+    }
+};
 
-    // Состояние чата
-    state: {
-        lastMessageId: 0,
-        isLoading: false,
-        hasMoreMessages: true,
-        currentPage: 1,
-        refreshInterval: null,
-        chatMessages: null
-    },
+/**
+ * Селекторы DOM элементов
+ */
+const SELECTORS = {
+    chatMessages: '#chat-messages',
+    loadMoreBtn: '#load-more-btn',
+    loadingIndicator: '#loading-indicator',
+    messageForm: '#message-form',
+    pollForm: '#poll-form',
+    messageItem: '.message-item',
+    dateSeparator: '.date-separator'
+};
 
-    // Инициализация расширенного чата
+/**
+ * Основной класс для управления чатом
+ */
+class ChatManager {
+    constructor() {
+        this.state = {
+            lastMessageId: 0,
+            isLoading: false,
+            hasMoreMessages: true,
+            currentPage: 1,
+            refreshInterval: null,
+            chatMessages: null
+        };
+        
+        this.domElements = {};
+        this.messageRenderer = new MessageRenderer();
+        this.apiClient = new ChatApiClient();
+    }
+
+    /**
+     * Инициализация чата
+     */
     init() {
-        if (!window.location.pathname.includes('/chat/')) return;
+        if (!this.isOnChatPage()) return;
 
-        this.state.chatMessages = document.getElementById('chat-messages');
-        this.initializeChat();
-        this.setupEventListeners();
-    },
+        this.initializeDomElements();
+        this.setupInitialState();
+        this.bindEventListeners();
+        this.startAutoRefresh();
+    }
 
-    // Первоначальная настройка
-    initializeChat() {
+    /**
+     * Проверка, находимся ли мы на странице чата
+     */
+    isOnChatPage() {
+        return window.location.pathname.includes('/chat/');
+    }
+
+    /**
+     * Инициализация DOM элементов
+     */
+    initializeDomElements() {
+        this.domElements = {
+            chatMessages: document.querySelector(SELECTORS.chatMessages),
+            loadMoreBtn: document.querySelector(SELECTORS.loadMoreBtn),
+            loadingIndicator: document.querySelector(SELECTORS.loadingIndicator),
+            messageForm: document.querySelector(SELECTORS.messageForm),
+            pollForm: document.querySelector(SELECTORS.pollForm)
+        };
+
+        this.state.chatMessages = this.domElements.chatMessages;
+    }
+
+    /**
+     * Настройка начального состояния
+     */
+    setupInitialState() {
         this.updateLastMessageId();
         this.hideLoadingIndicator();
         this.scrollToBottom();
-        this.startAutoRefresh();
         this.setupScrollHandler();
-    },
+    }
 
-    // Настройка обработчиков событий
-    setupEventListeners() {
-        // Обработчики форм
-        this.bindFormSubmission();
+    /**
+     * Привязка обработчиков событий
+     */
+    bindEventListeners() {
+        this.bindFormSubmissions();
+        this.bindLoadMoreButton();
+    }
+
+    /**
+     * Привязка обработчиков форм
+     */
+    bindFormSubmissions() {
+        if (this.domElements.messageForm) {
+            this.domElements.messageForm.addEventListener('submit', (e) => {
+                this.handleFormSubmission(e, 'message');
+            });
+        }
+
+        if (this.domElements.pollForm) {
+            this.domElements.pollForm.addEventListener('submit', (e) => {
+                this.handleFormSubmission(e, 'poll');
+            });
+        }
+    }
+
+    /**
+     * Привязка кнопки загрузки старых сообщений
+     */
+    bindLoadMoreButton() {
+        if (this.domElements.loadMoreBtn) {
+            this.domElements.loadMoreBtn.addEventListener('click', () => {
+                this.loadOlderMessages();
+            });
+        }
+    }
+
+    /**
+     * Обработка отправки форм
+     */
+    async handleFormSubmission(event, formType) {
+        event.preventDefault();
+        const form = event.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
         
-        // Кнопка загрузки старых сообщений
-        const loadMoreBtn = document.getElementById('load-more-btn');
-        if (loadMoreBtn) {
-            loadMoreBtn.addEventListener('click', () => this.loadOlderMessages());
+        try {
+            this.toggleSubmitButton(submitBtn, true);
+            
+            const success = await this.apiClient.submitForm(form, formType);
+            
+            if (success) {
+                form.reset();
+                NotificationManager.show(
+                    formType === 'message' ? 'Сообщение отправлено!' : 'Голосование создано!',
+                    'success'
+                );
+            }
+        } catch (error) {
+            NotificationManager.show(
+                `Ошибка ${formType === 'message' ? 'отправки сообщения' : 'создания голосования'}`,
+                'error'
+            );
+        } finally {
+            this.toggleSubmitButton(submitBtn, false);
         }
-    },
+    }
 
-    // Обновление ID последнего сообщения
+    /**
+     * Обновление ID последнего сообщения
+     */
     updateLastMessageId() {
-        const lastMessage = document.querySelector('.message-item:last-child');
+        const lastMessage = document.querySelector(`${SELECTORS.messageItem}:last-child`);
         if (lastMessage) {
-            this.state.lastMessageId = lastMessage.dataset.messageId || 0;
+            this.state.lastMessageId = parseInt(lastMessage.dataset.messageId) || 0;
         }
-    },
+    }
 
-    // Скрытие индикатора загрузки
+    /**
+     * Скрытие индикатора загрузки
+     */
     hideLoadingIndicator() {
-        const indicator = document.getElementById('loading-indicator');
-        if (indicator) {
-            indicator.style.display = 'none';
+        if (this.domElements.loadingIndicator) {
+            this.domElements.loadingIndicator.style.display = 'none';
         }
-    },
+    }
 
-    // Настройка обработчика прокрутки
+    /**
+     * Настройка обработчика прокрутки
+     */
     setupScrollHandler() {
         if (!this.state.chatMessages) return;
 
-        this.state.chatMessages.addEventListener('scroll', Utils.throttle(() => {
-            if (this.state.chatMessages.scrollTop === 0 && 
-                this.state.hasMoreMessages && 
-                !this.state.isLoading) {
+        this.state.chatMessages.addEventListener('scroll', this.throttle(() => {
+            if (this.shouldLoadMoreMessages()) {
                 this.loadOlderMessages();
             }
         }, 250));
-    },
+    }
 
-    // Автообновление сообщений
+    /**
+     * Проверка необходимости загрузки старых сообщений
+     */
+    shouldLoadMoreMessages() {
+        return (
+            this.state.chatMessages.scrollTop === 0 &&
+            this.state.hasMoreMessages &&
+            !this.state.isLoading
+        );
+    }
+
+    /**
+     * Начало автообновления
+     */
     startAutoRefresh() {
         this.state.refreshInterval = setInterval(() => {
             this.refreshMessages();
-        }, this.config.refreshInterval);
-    },
+        }, CHAT_CONFIG.refreshInterval);
+    }
 
-    // Остановка автообновления
+    /**
+     * Остановка автообновления
+     */
     stopAutoRefresh() {
         if (this.state.refreshInterval) {
             clearInterval(this.state.refreshInterval);
             this.state.refreshInterval = null;
         }
-    },
+    }
 
-    // Обновление новых сообщений
-    refreshMessages() {
-        $.get('/chat/api/messages/', { 
-            last_id: this.state.lastMessageId 
-        })
-        .done((data) => {
+    /**
+     * Обновление новых сообщений
+     */
+    async refreshMessages() {
+        try {
+            const data = await this.apiClient.getMessages({ last_id: this.state.lastMessageId });
+            
             if (data.messages && data.messages.length > 0) {
-                data.messages.forEach(message => {
-                    this.addNewMessage(message);
-                });
-                this.state.lastMessageId = data.last_id;
+                this.processIncomingMessages(data.messages);
+                
+                // Проверяем, что last_id корректен
+                if (data.last_id !== undefined && data.last_id !== null) {
+                    this.state.lastMessageId = data.last_id;
+                } else {
+                    console.warn('last_id is undefined in API response');
+                    // Получаем максимальный ID из сообщений как fallback
+                    const messageIds = data.messages
+                        .filter(item => item.type === 'message')
+                        .map(item => item.id);
+                    if (messageIds.length > 0) {
+                        this.state.lastMessageId = Math.max(...messageIds);
+                    }
+                }
+                
                 this.scrollToBottom();
             }
-        })
-        .fail(() => {
-            console.warn('Ошибка обновления чата');
-        });
-    },
+        } catch (error) {
+            console.warn('Ошибка обновления чата:', error);
+        }
+    }
 
-    // Загрузка старых сообщений
-    loadOlderMessages() {
+    /**
+     * Загрузка старых сообщений
+     */
+    async loadOlderMessages() {
         if (this.state.isLoading || !this.state.hasMoreMessages) return;
 
         this.state.isLoading = true;
         this.updateLoadMoreButton('loading');
 
-        const firstMessage = document.querySelector('.message-item:first-child');
-        const beforeId = firstMessage ? firstMessage.dataset.messageId : null;
+        try {
+            const firstMessage = document.querySelector(`${SELECTORS.messageItem}:first-child`);
+            const beforeId = firstMessage ? firstMessage.dataset.messageId : null;
 
-        $.get('/chat/api/messages/', {
-            page: this.state.currentPage + 1,
-            before_id: beforeId
-        })
-        .done((data) => {
+            const data = await this.apiClient.getMessages({
+                page: this.state.currentPage + 1,
+                before_id: beforeId
+            });
+
             this.handleOlderMessagesResponse(data);
-        })
-        .fail(() => {
-            Notifications.show('Ошибка загрузки сообщений', 'error');
-        })
-        .always(() => {
+        } catch (error) {
+            NotificationManager.show('Ошибка загрузки сообщений', 'error');
+        } finally {
             this.state.isLoading = false;
             this.updateLoadMoreButton('normal');
-        });
-    },
+        }
+    }
 
-    // Обработка ответа с старыми сообщениями
+    /**
+     * Обработка ответа с старыми сообщениями
+     */
     handleOlderMessagesResponse(data) {
         if (data.messages && data.messages.length > 0) {
             const scrollHeight = this.state.chatMessages.scrollHeight;
             
-            // Добавляем сообщения в обратном порядке
-            data.messages.reverse().forEach(message => {
-                this.prependOldMessage(message);
+            // Добавляем элементы в обратном порядке
+            data.messages.reverse().forEach(item => {
+                this.messageRenderer.prependMessage(item, this.state.chatMessages);
             });
 
             this.state.currentPage++;
@@ -156,29 +295,160 @@ const ChatEnhanced = {
         } else {
             this.state.hasMoreMessages = false;
         }
-    },
+    }
 
-    // Добавление нового сообщения
-    addNewMessage(message) {
+    /**
+     * Обработка входящих сообщений
+     */
+    processIncomingMessages(messages) {
+        messages.forEach(item => {
+            this.messageRenderer.appendMessage(item, this.state.chatMessages);
+        });
+    }
+
+    /**
+     * Переключение состояния кнопки отправки
+     */
+    toggleSubmitButton(button, isLoading, loadingText = 'Отправка...') {
+        if (!button) return;
+
+        if (isLoading) {
+            button.disabled = true;
+            button.dataset.originalText = button.textContent;
+            button.innerHTML = `<span class="spinner"></span> ${loadingText}`;
+        } else {
+            button.disabled = false;
+            button.textContent = button.dataset.originalText || 'Отправить';
+        }
+    }
+
+    /**
+     * Обновление кнопки загрузки
+     */
+    updateLoadMoreButton(state) {
+        const btn = this.domElements.loadMoreBtn;
+        if (!btn) return;
+
+        switch (state) {
+            case 'loading':
+                btn.innerHTML = '<div class="spinner"></div> Загрузка...';
+                break;
+            case 'normal':
+            default:
+                btn.innerHTML = '<i class="fas fa-chevron-up"></i> Загрузить старые сообщения';
+                break;
+        }
+    }
+
+    /**
+     * Прокрутка к низу
+     */
+    scrollToBottom() {
+        if (this.state.chatMessages) {
+            this.state.chatMessages.scrollTop = this.state.chatMessages.scrollHeight;
+        }
+    }
+
+    /**
+     * Функция throttle для оптимизации производительности
+     */
+    throttle(func, limit) {
+        let inThrottle;
+        return function() {
+            const args = arguments;
+            const context = this;
+            if (!inThrottle) {
+                func.apply(context, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        };
+    }
+
+    /**
+     * Очистка ресурсов
+     */
+    cleanup() {
+        this.stopAutoRefresh();
+    }
+}
+
+/**
+ * Класс для рендеринга сообщений
+ */
+class MessageRenderer {
+    /**
+     * Добавление сообщения в конец
+     */
+    appendMessage(item, container) {
+        if (item.type === 'date_separator') {
+            this.appendDateSeparator(item, container);
+        } else if (item.type === 'message') {
+            this.appendMessageElement(item, container);
+        }
+    }
+
+    /**
+     * Добавление сообщения в начало
+     */
+    prependMessage(item, container) {
+        if (item.type === 'date_separator') {
+            this.prependDateSeparator(item, container);
+        } else if (item.type === 'message') {
+            this.prependMessageElement(item, container);
+        }
+    }
+
+    /**
+     * Добавление элемента сообщения в конец
+     */
+    appendMessageElement(message, container) {
         if (this.messageExists(message.id)) return;
 
         const messageElement = this.createMessageElement(message);
-        this.state.chatMessages.appendChild(messageElement);
-        
-        // Добавляем анимацию появления
+        container.appendChild(messageElement);
         messageElement.classList.add('fade-in');
-    },
+    }
 
-    // Добавление старого сообщения в начало
-    prependOldMessage(message) {
+    /**
+     * Добавление элемента сообщения в начало
+     */
+    prependMessageElement(message, container) {
         const messageElement = this.createMessageElement(message);
-        this.state.chatMessages.insertBefore(
-            messageElement, 
-            this.state.chatMessages.firstChild
-        );
-    },
+        container.insertBefore(messageElement, container.firstChild);
+    }
 
-    // Создание элемента сообщения
+    /**
+     * Добавление разделителя даты в конец
+     */
+    appendDateSeparator(dateSeparator, container) {
+        // Проверяем существование по дате и по читаемому тексту (для надежности)
+        if (this.dateSeparatorExists(dateSeparator.date) || 
+            this.dateSeparatorExistsByText(dateSeparator.date_readable)) {
+            return;
+        }
+
+        const separatorElement = this.createDateSeparatorElement(dateSeparator);
+        container.appendChild(separatorElement);
+    }
+
+    /**
+     * Добавление разделителя даты в начало
+     */
+    prependDateSeparator(dateSeparator, container) {
+        // Проверяем существование по дате и по читаемому тексту (для надежности)
+        if (this.dateSeparatorExists(dateSeparator.date) || 
+            this.dateSeparatorExistsByText(dateSeparator.date_readable)) {
+            return;
+        }
+
+        const separatorElement = this.createDateSeparatorElement(dateSeparator);
+        container.insertBefore(separatorElement, container.firstChild);
+    }
+
+    /**
+     * Создание элемента сообщения
+     */
     createMessageElement(message) {
         const div = document.createElement('div');
         div.className = 'message-item';
@@ -190,9 +460,28 @@ const ChatEnhanced = {
 
         div.innerHTML = this.createMessageHTML(message);
         return div;
-    },
+    }
 
-    // Создание HTML сообщения
+    /**
+     * Создание элемента разделителя даты
+     */
+    createDateSeparatorElement(dateSeparator) {
+        const div = document.createElement('div');
+        div.className = 'date-separator';
+        div.dataset.date = dateSeparator.date;
+        
+        div.innerHTML = `
+            <div class="date-separator-line"></div>
+            <div class="date-separator-text">${this.escapeHtml(dateSeparator.date_readable)}</div>
+            <div class="date-separator-line"></div>
+        `;
+        
+        return div;
+    }
+
+    /**
+     * Создание HTML содержимого сообщения
+     */
     createMessageHTML(message) {
         let html = `
             <div class="d-flex justify-content-between">
@@ -210,9 +499,11 @@ const ChatEnhanced = {
 
         html += '</div>';
         return html;
-    },
+    }
 
-    // Создание HTML для голосования
+    /**
+     * Создание HTML для голосования
+     */
     createPollHTML(poll) {
         let html = `
             <div class="poll-container">
@@ -246,161 +537,128 @@ const ChatEnhanced = {
         `;
 
         return html;
-    },
+    }
 
-    // Привязка отправки форм
-    bindFormSubmission() {
-        // Отправка сообщений
-        const messageForm = document.getElementById('message-form');
-        if (messageForm) {
-            messageForm.addEventListener('submit', (e) => {
-                this.handleMessageSubmission(e);
-            });
-        }
-
-        // Создание голосований
-        const pollForm = document.getElementById('poll-form');
-        if (pollForm) {
-            pollForm.addEventListener('submit', (e) => {
-                this.handlePollSubmission(e);
-            });
-        }
-    },
-
-    // Обработка отправки сообщения
-    handleMessageSubmission(e) {
-        e.preventDefault();
-        const form = e.target;
-        const formData = new FormData(form);
-        const submitBtn = form.querySelector('button[type="submit"]');
-        
-        this.toggleSubmitButton(submitBtn, true);
-
-        $.ajax({
-            url: form.action,
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: (data) => {
-                if (data.success) {
-                    form.reset();
-                    Notifications.show('Сообщение отправлено!', 'success');
-                } else {
-                    Notifications.show(data.error || 'Ошибка отправки', 'error');
-                }
-            },
-            error: () => {
-                Notifications.show('Ошибка отправки сообщения', 'error');
-            },
-            complete: () => {
-                this.toggleSubmitButton(submitBtn, false);
-            }
-        });
-    },
-
-    // Обработка создания голосования
-    handlePollSubmission(e) {
-        e.preventDefault();
-        const form = e.target;
-        const formData = new FormData(form);
-        const submitBtn = form.querySelector('button[type="submit"]');
-        
-        this.toggleSubmitButton(submitBtn, true, 'Создание...');
-
-        $.ajax({
-            url: form.action,
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: (data) => {
-                if (data.success) {
-                    form.reset();
-                    Notifications.show('Голосование создано!', 'success');
-                } else {
-                    Notifications.show(data.error || 'Ошибка создания', 'error');
-                }
-            },
-            error: () => {
-                Notifications.show('Ошибка создания голосования', 'error');
-            },
-            complete: () => {
-                this.toggleSubmitButton(submitBtn, false);
-            }
-        });
-    },
-
-    // Переключение состояния кнопки отправки
-    toggleSubmitButton(button, isLoading, loadingText = 'Отправка...') {
-        if (!button) return;
-
-        if (isLoading) {
-            button.disabled = true;
-            button.dataset.originalText = button.textContent;
-            button.innerHTML = `<span class="spinner"></span> ${loadingText}`;
-        } else {
-            button.disabled = false;
-            button.textContent = button.dataset.originalText || 'Отправить';
-        }
-    },
-
-    // Обновление кнопки загрузки
-    updateLoadMoreButton(state) {
-        const btn = document.getElementById('load-more-btn');
-        if (!btn) return;
-
-        switch (state) {
-            case 'loading':
-                btn.innerHTML = '<div class="spinner"></div> Загрузка...';
-                break;
-            case 'normal':
-            default:
-                btn.innerHTML = '<i class="fas fa-chevron-up"></i> Загрузить старые сообщения';
-                break;
-        }
-    },
-
-    // Прокрутка к низу
-    scrollToBottom() {
-        if (this.state.chatMessages) {
-            this.state.chatMessages.scrollTop = this.state.chatMessages.scrollHeight;
-        }
-    },
-
-    // Проверка существования сообщения
+    /**
+     * Проверка существования сообщения
+     */
     messageExists(messageId) {
         return document.querySelector(`[data-message-id="${messageId}"]`) !== null;
-    },
+    }
 
-    // Получение имени текущего пользователя
+    /**
+     * Проверка существования разделителя даты
+     */
+    dateSeparatorExists(date) {
+        return document.querySelector(`[data-date="${date}"]`) !== null;
+    }
+
+    /**
+     * Проверка существования разделителя даты по тексту
+     */
+    dateSeparatorExistsByText(dateText) {
+        const separators = document.querySelectorAll('.date-separator-text');
+        for (let separator of separators) {
+            if (separator.textContent.trim() === dateText) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Получение имени текущего пользователя
+     */
     getCurrentUsername() {
-        // Можно получить из глобальной переменной или другого источника
         return window.currentUser || '';
-    },
+    }
 
-    // Экранирование HTML
+    /**
+     * Экранирование HTML
+     */
     escapeHtml(text) {
         const div = document.createElement('div');
-        div.textContent = text;
+        div.textContent = text || '';
         return div.innerHTML;
-    },
-
-    // Очистка при уходе со страницы
-    cleanup() {
-        this.stopAutoRefresh();
     }
-};
+}
+
+/**
+ * Класс для работы с API чата
+ */
+class ChatApiClient {
+    /**
+     * Получение сообщений
+     */
+    async getMessages(params) {
+        const url = new URL(CHAT_CONFIG.apiEndpoints.messages, window.location.origin);
+        Object.keys(params).forEach(key => {
+            if (params[key] !== undefined && params[key] !== null) {
+                url.searchParams.append(key, params[key]);
+            }
+        });
+
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    }
+
+    /**
+     * Отправка формы
+     */
+    async submitForm(form, formType) {
+        const formData = new FormData(form);
+        
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || 'Неизвестная ошибка');
+        }
+
+        return true;
+    }
+}
+
+/**
+ * Класс для управления уведомлениями
+ */
+class NotificationManager {
+    static show(message, type = 'info') {
+        // Простая реализация уведомлений
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        // Здесь можно добавить более сложную логику отображения уведомлений
+        if (window.Notifications && typeof window.Notifications.show === 'function') {
+            window.Notifications.show(message, type);
+        }
+    }
+}
+
+// Создание и инициализация менеджера чата
+const chatManager = new ChatManager();
 
 // Инициализация при загрузке DOM
-$(document).ready(() => {
-    ChatEnhanced.init();
+document.addEventListener('DOMContentLoaded', () => {
+    chatManager.init();
 });
 
 // Очистка при уходе со страницы
-$(window).on('beforeunload', () => {
-    ChatEnhanced.cleanup();
+window.addEventListener('beforeunload', () => {
+    chatManager.cleanup();
 });
 
 // Экспорт для возможного использования
-window.ChatEnhanced = ChatEnhanced; 
+window.ChatManager = chatManager; 

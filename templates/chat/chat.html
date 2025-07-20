@@ -39,40 +39,58 @@
                                 <div class="spinner"></div> Загрузка сообщений...
                             </div>
                             
-                            <!-- Начальные сообщения -->
-                            {% for message in chat_messages %}
-                            <div class="message-item {% if message.author == user %}own{% endif %}" data-message-id="{{ message.id }}">
-                            <div class="d-flex justify-content-between">
-                                <strong class="text-primary">{{ message.author.username }}</strong>
-                                <small class="text-muted">{{ message.created_at|date:"H:i" }}</small>
-                            </div>
-                            <div class="message-content mt-2">
-                                {% if message.message_type == 'poll' and message.poll %}
-                                <div class="poll-container">
-                                    <h6><i class="fas fa-poll"></i> {{ message.poll.question }}</h6>
-                                    <div class="poll-options">
-                                        {% for option in message.poll.options.all %}
-                                        <div class="poll-option {% if option.id in user_votes %}voted{% endif %}" 
-                                                 data-option-id="{{ option.id }}" data-poll-id="{{ message.poll.id }}">
-                                            <div class="d-flex justify-content-between">
-                                                <span>{{ option.text }}</span>
-                                                <span class="poll-votes">{{ option.vote_count }}</span>
-                                            </div>
-                                                <div class="poll-progress">
-                                                    <div class="poll-progress-bar" style="width: {{ option.vote_percentage }}%"></div>
-                                                </div>
-                                            </div>
-                                            {% endfor %}
-                                        </div>
-                                        <div class="text-center mt-2">
-                                            <small class="text-muted poll-total-votes">{{ message.poll.total_votes }} голосов</small>
+                            <!-- Группированные сообщения по дням -->
+                            {% for date, messages in grouped_messages.items %}
+                                <!-- Разделитель даты -->
+                                <div class="date-separator">
+                                    <div class="date-separator-line"></div>
+                                    <div class="date-separator-text">
+                                        {% if date == today %}
+                                            Сегодня
+                                        {% elif date == yesterday %}
+                                            Вчера  
+                                        {% else %}
+                                            {{ date|date:"d.m.Y" }}
+                                        {% endif %}
                                     </div>
+                                    <div class="date-separator-line"></div>
                                 </div>
-                                {% else %}
-                                {{ message.content|linebreaks }}
-                                {% endif %}
+                                
+                                <!-- Сообщения за этот день -->
+                                {% for message in messages %}
+                                <div class="message-item {% if message.author == user %}own{% endif %}" data-message-id="{{ message.id }}">
+                                <div class="d-flex justify-content-between">
+                                    <strong class="text-primary">{{ message.author.username }}</strong>
+                                    <small class="text-muted">{{ message.created_at|date:"H:i" }}</small>
+                                </div>
+                                <div class="message-content mt-2">
+                                    {% if message.message_type == 'poll' and message.poll %}
+                                    <div class="poll-container">
+                                        <h6><i class="fas fa-poll"></i> {{ message.poll.question }}</h6>
+                                        <div class="poll-options">
+                                            {% for option in message.poll.options.all %}
+                                            <div class="poll-option {% if option.id in user_votes %}voted{% endif %}" 
+                                                     data-option-id="{{ option.id }}" data-poll-id="{{ message.poll.id }}">
+                                                <div class="d-flex justify-content-between">
+                                                    <span>{{ option.text }}</span>
+                                                    <span class="poll-votes">{{ option.vote_count }}</span>
+                                                </div>
+                                                    <div class="poll-progress">
+                                                        <div class="poll-progress-bar" style="width: {{ option.vote_percentage }}%"></div>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                            <div class="text-center mt-2">
+                                                <small class="text-muted poll-total-votes">{{ message.poll.total_votes }} голосов</small>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    {{ message.content|linebreaks }}
+                                    {% endif %}
+                                </div>
                             </div>
-                        </div>
+                            {% endfor %}
                         {% endfor %}
                         </div>
                     </div>

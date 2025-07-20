@@ -9,8 +9,7 @@ const ObsidianTime = {
     config: {
         scrollOffset: 80,
         alertTimeout: 5000,
-        searchDebounceDelay: 500,
-        chatRefreshInterval: 3000
+        searchDebounceDelay: 500
     },
 
     // Инициализация приложения
@@ -38,7 +37,7 @@ const ObsidianTime = {
     initComponents() {
         Notifications.init();
         Gallery.init();
-        Chat.init();
+        // Chat.init(); // Удален - теперь используется ChatManager из chat.js
         Navigation.init();
         Forms.init();
     },
@@ -47,7 +46,7 @@ const ObsidianTime = {
     bindEvents() {
         Navigation.bindEvents();
         Forms.bindEvents();
-        Gallery.bindEvents();
+        // Gallery события привязываются в Gallery.init() через bindReactionEvents()
         UI.bindEvents();
     },
 
@@ -356,107 +355,9 @@ const Gallery = {
 };
 
 /**
- * Чат функциональность
+ * Чат функциональность - ПЕРЕНЕСЕНА в chat.js
+ * Используется ChatManager класс для современного управления чатом
  */
-const Chat = {
-    lastMessageId: 0,
-    refreshInterval: null,
-
-    init() {
-        if (window.location.pathname.includes('/chat/')) {
-            this.setupChat();
-        }
-    },
-
-    setupChat() {
-        this.startAutoRefresh();
-        this.bindPollEvents();
-    },
-
-    startAutoRefresh() {
-        this.refreshInterval = setInterval(() => {
-            this.refreshMessages();
-        }, ObsidianTime.config.chatRefreshInterval);
-    },
-
-    refreshMessages() {
-        $.get('/chat/api/messages/', { last_id: this.lastMessageId })
-            .done((data) => {
-                if (data.messages && data.messages.length > 0) {
-                    data.messages.forEach(message => {
-                        this.addMessage(message);
-                    });
-                    this.lastMessageId = data.last_id;
-                    this.scrollToBottom();
-                }
-            })
-            .fail(() => {
-                console.warn('Ошибка обновления чата');
-            });
-    },
-
-    addMessage(message) {
-        // Проверяем, нет ли уже такого сообщения
-        if ($(`[data-message-id="${message.id}"]`).length > 0) return;
-
-        const $container = $('.chat-messages');
-        const messageHtml = this.createMessageHtml(message);
-        $container.append(messageHtml);
-    },
-
-    createMessageHtml(message) {
-        // Упрощенная версия создания HTML сообщения
-        return `
-            <div class="message-item" data-message-id="${message.id}">
-                <div class="d-flex justify-content-between">
-                    <strong class="text-primary">${message.author}</strong>
-                    <small class="text-muted">${message.created_at}</small>
-                </div>
-                <div class="message-content mt-2">${message.content}</div>
-            </div>
-        `;
-    },
-
-    scrollToBottom() {
-        const $container = $('.chat-messages');
-        if ($container.length > 0) {
-            $container.scrollTop($container[0].scrollHeight);
-        }
-    },
-
-    bindPollEvents() {
-        $(document).on('click', '.poll-option', this.handlePollVote);
-    },
-
-    handlePollVote(e) {
-        e.preventDefault();
-        const $option = $(e.currentTarget);
-        const optionId = $option.data('option-id');
-        const pollId = $option.data('poll-id');
-
-        if (!optionId || !pollId) return;
-
-        $.post(`/chat/poll/${pollId}/vote/${optionId}/`)
-            .done((data) => {
-                Chat.updatePollDisplay($option.closest('.poll-container'), data);
-            })
-            .fail(() => {
-                Notifications.show('Ошибка голосования', 'error');
-            });
-    },
-
-    updatePollDisplay(container, data) {
-        // Обновляем отображение голосования
-        container.find('.poll-total-votes').text(`${data.total_votes} голосов`);
-
-        data.options.forEach(option => {
-            const $optionElement = container.find(`[data-option-id="${option.id}"]`);
-            $optionElement.find('.poll-votes').text(option.vote_count);
-            $optionElement.find('.poll-progress-bar').css('width', `${option.vote_percentage}%`);
-            $optionElement.toggleClass('voted', option.user_voted);
-        });
-    }
-};
 
 /**
  * UI компоненты и эффекты
