@@ -310,8 +310,12 @@ def feedback_detail(request, pk):
             comment.save()
             messages.success(request, "Комментарий добавлен!")
             return redirect("main:feedback_detail", pk=pk)
+        else:
+            # Если есть ошибки в форме, показываем её
+            show_comment_form = True
     else:
         comment_form = FeedbackCommentForm(user=request.user)
+        show_comment_form = False
 
     # Определяем, может ли пользователь комментировать
     can_comment = request.user.is_staff or feedback.user == request.user
@@ -322,6 +326,7 @@ def feedback_detail(request, pk):
         "page_obj": page_obj,
         "comment_form": comment_form,
         "can_comment": can_comment,
+        "show_comment_form": show_comment_form,
     }
     return render(request, "main/feedback_detail.html", context)
 
@@ -429,14 +434,19 @@ def admin_feedback_detail(request, pk):
             else:
                 messages.success(request, "Комментарий добавлен!")
                 return redirect("main:admin_feedback_detail", pk=pk)
+        else:
+            # Если есть ошибки в форме, показываем её
+            show_comment_form = True
     else:
         comment_form = FeedbackCommentForm(user=request.user)
+        show_comment_form = False
 
     context = {
         "feedback": feedback,
         "comments": page_obj.object_list,
         "page_obj": page_obj,
         "comment_form": comment_form,
+        "show_comment_form": show_comment_form,
     }
     return render(request, "main/admin_feedback_detail.html", context)
 

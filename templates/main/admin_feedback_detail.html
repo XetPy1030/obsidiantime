@@ -111,11 +111,79 @@
             <div class="card shadow-lg mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4><i class="fas fa-comments"></i> Комментарии ({{ page_obj.paginator.count }})</h4>
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#commentForm">
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#commentForm" aria-expanded="false" aria-controls="commentForm">
                         <i class="fas fa-plus"></i> Добавить комментарий
                     </button>
                 </div>
                 <div class="card-body">
+                    <!-- Форма добавления комментария -->
+                    {% if comment_form %}
+                    <div class="collapse mb-4 {% if show_comment_form %}show{% endif %}" id="commentForm">
+                        <div class="card border-primary shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-plus"></i> Добавить комментарий
+                                    {% if comment_form.errors %}
+                                    <span class="badge bg-danger ms-2">
+                                        <i class="fas fa-exclamation-triangle"></i> Исправьте ошибки
+                                    </span>
+                                    {% endif %}
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <form method="post" id="commentFormElement">
+                                    {% csrf_token %}
+                                    
+                                    {% if comment_form.errors %}
+                                    <div class="alert alert-danger">
+                                        <h6><i class="fas fa-exclamation-triangle"></i> Ошибки в форме:</h6>
+                                        {{ comment_form.errors }}
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="mb-3">
+                                        <label for="{{ comment_form.comment.id_for_label }}" class="form-label">
+                                            <i class="fas fa-comment text-primary"></i> Комментарий *
+                                        </label>
+                                        {{ comment_form.comment }}
+                                        {% if comment_form.comment.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ comment_form.comment.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle"></i> Минимум 5 символов
+                                        </div>
+                                    </div>
+                                    
+                                    {% if user.is_staff and comment_form.is_internal %}
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            {{ comment_form.is_internal }}
+                                            <label class="form-check-label" for="{{ comment_form.is_internal.id_for_label }}">
+                                                <i class="fas fa-eye-slash text-warning"></i> Внутренний комментарий
+                                            </label>
+                                            <div class="form-text">
+                                                Внутренние комментарии видны только администраторам
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="text-center">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-paper-plane"></i> Добавить комментарий
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary ms-2" data-bs-toggle="collapse" data-bs-target="#commentForm">
+                                            <i class="fas fa-times"></i> Отмена
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="comments-list">
                         {% if comments %}
                             {% for comment in comments %}
@@ -235,62 +303,6 @@
                     {% endif %}
                 </div>
             </div>
-
-            <!-- Форма добавления комментария -->
-            {% if comment_form %}
-            <div class="card shadow-lg collapse" id="commentForm">
-                <div class="card-header">
-                    <h5><i class="fas fa-plus"></i> Добавить комментарий</h5>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        {% if comment_form.errors %}
-                        <div class="alert alert-danger">
-                            <h6><i class="fas fa-exclamation-triangle"></i> Ошибки в форме:</h6>
-                            {{ comment_form.errors }}
-                        </div>
-                        {% endif %}
-                        
-                        <div class="mb-3">
-                            <label for="{{ comment_form.comment.id_for_label }}" class="form-label">
-                                <i class="fas fa-comment text-primary"></i> Комментарий *
-                            </label>
-                            {{ comment_form.comment }}
-                            {% if comment_form.comment.errors %}
-                            <div class="invalid-feedback d-block">
-                                {{ comment_form.comment.errors.0 }}
-                            </div>
-                            {% endif %}
-                            <div class="form-text">
-                                <i class="fas fa-info-circle"></i> Минимум 5 символов
-                            </div>
-                        </div>
-                        
-                        {% if user.is_staff and comment_form.is_internal %}
-                        <div class="mb-3">
-                            <div class="form-check">
-                                {{ comment_form.is_internal }}
-                                <label class="form-check-label" for="{{ comment_form.is_internal.id_for_label }}">
-                                    <i class="fas fa-eye-slash text-warning"></i> Внутренний комментарий
-                                </label>
-                                <div class="form-text">
-                                    Внутренние комментарии видны только администраторам
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane"></i> Добавить комментарий
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            {% endif %}
         </div>
     </div>
 </div>
@@ -325,7 +337,107 @@
 .breadcrumb a:hover {
     text-decoration: underline;
 }
+
+/* Улучшенные стили для формы комментариев */
+#commentForm .card {
+    border: 2px solid #007bff;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.1);
+}
+
+#commentForm .card-header {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+}
+
+/* Стили для формы с ошибкой */
+#commentForm.show .card {
+    border-color: #dc3545;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
+    animation: errorShake 0.5s ease-in-out;
+}
+
+#commentForm.show .card-header {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+/* Анимация встряхивания при ошибке */
+@keyframes errorShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Анимация для кнопки добавления комментария */
+.btn[data-bs-toggle="collapse"] {
+    transition: all 0.3s ease;
+}
+
+.btn[data-bs-toggle="collapse"]:hover {
+    transform: scale(1.05);
+}
+
+/* Стили для текстового поля комментария */
+#commentForm textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Стили для поля с ошибкой */
+#commentForm textarea.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Анимация появления комментариев */
+.comment {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 </style>
+
+<script>
+// Автоматическое фокусирование на поле комментария при раскрытии формы
+document.addEventListener('DOMContentLoaded', function() {
+    const commentForm = document.getElementById('commentForm');
+    const commentTextarea = document.querySelector('#commentForm textarea');
+    const toggleButton = document.querySelector('[data-bs-toggle="collapse"][data-bs-target="#commentForm"]');
+    
+    if (commentForm && commentTextarea) {
+        // Фокусирование при раскрытии формы
+        commentForm.addEventListener('shown.bs.collapse', function() {
+            commentTextarea.focus();
+        });
+        
+        // Если форма уже раскрыта (при ошибке), фокусируемся сразу
+        if (commentForm.classList.contains('show')) {
+            commentTextarea.focus();
+        }
+        
+        // Обновляем состояние кнопки при ошибке
+        if (commentForm.classList.contains('show') && toggleButton) {
+            toggleButton.setAttribute('aria-expanded', 'true');
+        }
+        
+        // Добавляем класс is-invalid к полям с ошибками
+        const errorFields = commentForm.querySelectorAll('.invalid-feedback');
+        errorFields.forEach(function(errorField) {
+            const field = errorField.previousElementSibling;
+            if (field && field.tagName === 'TEXTAREA') {
+                field.classList.add('is-invalid');
+            }
+        });
+    }
+});
+</script>
 
 {% block extra_js %}
 <script src="{% static 'js/feedback.js' %}"></script>
