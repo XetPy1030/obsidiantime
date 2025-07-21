@@ -1,10 +1,17 @@
+import io
+import logging
+
 from django.contrib.auth.models import User
+from django.core.files.base import ContentFile
 from django.db import models
 from django.utils import timezone
 from PIL import Image
 
 # Constants
 COMMENT_PREVIEW_LENGTH = 50
+
+# Получаем логгер для этого модуля
+logger = logging.getLogger(__name__)
 
 
 class Meme(models.Model):
@@ -26,17 +33,43 @@ class Meme(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
+        # Сначала сохраняем объект
+        is_new = self.pk is None
         super().save(*args, **kwargs)
 
-        # Оптимизируем изображение
-        if self.image:
-            img = Image.open(self.image.path)
+        # Оптимизируем изображение только для новых объектов
+        if is_new and self.image:
+            try:
+                self.image.seek(0)
+                img = Image.open(self.image)
 
-            # Изменяем размер если изображение слишком большое
-            max_size = (800, 600)
-            if img.width > max_size[0] or img.height > max_size[1]:
-                img.thumbnail(max_size, Image.Resampling.LANCZOS)
-                img.save(self.image.path, optimize=True, quality=85)
+                img_format = img.format or "JPEG"
+                max_size = (800, 600)
+                needs_resize = img.width > max_size[0] or img.height > max_size[1]
+                if needs_resize:
+                    img.thumbnail(max_size, Image.Resampling.LANCZOS)
+
+                output = io.BytesIO()
+                if img_format == "JPEG":
+                    img.save(output, format="JPEG", optimize=True, quality=85)
+                elif img_format == "PNG":
+                    img.save(output, format="PNG", optimize=True)
+                else:
+                    img.save(output, format=img_format, optimize=True)
+
+                output.seek(0)
+
+                new_image = ContentFile(output.getvalue())
+
+                self.image.save(self.image.name, new_image, save=False)
+
+                super().save(update_fields=["image"])
+
+            except Exception as e:
+                logger.error(
+                    f"Ошибка при оптимизации изображения для мема '{self.title}': {e}",
+                    exc_info=True,
+                )
 
     @property
     def likes_count(self):
