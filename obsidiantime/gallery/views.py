@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -8,6 +10,8 @@ from django.views.decorators.http import require_POST
 
 from .forms import CommentForm, MemeFilterForm, MemeUploadForm
 from .models import Dislike, Like, Meme
+
+logger = logging.getLogger(__name__)
 
 
 def gallery_list(request):
@@ -43,6 +47,12 @@ def gallery_list(request):
                 memes = memes.order_by("title")
             else:
                 memes = memes.order_by(sort)
+        else:
+            # Сортировка по умолчанию - сначала новые
+            memes = memes.order_by("-created_at")
+    else:
+        # Если форма невалидна, все равно добавляем сортировку по умолчанию
+        memes = memes.order_by("-created_at")
 
     # Пагинация
     paginator = Paginator(memes, 12)  # 12 мемов на страницу для красивой сетки

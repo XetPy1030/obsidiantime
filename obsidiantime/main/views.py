@@ -59,6 +59,12 @@ def quotes_list(request):
 
         if sort:
             quotes = quotes.order_by(sort)
+        else:
+            # Сортировка по умолчанию - сначала новые
+            quotes = quotes.order_by("-created_at")
+    else:
+        # Если форма невалидна, все равно добавляем сортировку по умолчанию
+        quotes = quotes.order_by("-created_at")
 
     # Пагинация
     paginator = Paginator(quotes, 20)
