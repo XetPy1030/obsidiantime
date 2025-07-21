@@ -34,6 +34,8 @@ urlpatterns = [
     path("robots.txt", RobotsTxtView.as_view(), name="robots_txt"),
     path("sitemap.xml", SitemapView.as_view(), name="sitemap_xml"),
     path("structured-data.json", StructuredDataView.as_view(), name="structured_data"),
+    # Prometheus метрики
+    path("", include("django_prometheus.urls")),
 ]
 
 # Обслуживание медиафайлов в режиме разработки

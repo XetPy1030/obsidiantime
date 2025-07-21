@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "tinymce",
     "django_filters",
     "storages",
+    "django_prometheus",
     # Local apps
     "obsidiantime.main",
     "obsidiantime.chat",
@@ -60,6 +61,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -67,6 +69,11 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
+    # Кастомные middleware для метрик
+    # "obsidiantime.main.middleware.MetricsMiddleware",
+    # "obsidiantime.main.middleware.UserMetricsMiddleware",
+    # "obsidiantime.main.middleware.MemeMetricsMiddleware",
 ]
 
 ROOT_URLCONF = "obsidiantime.config.urls"
@@ -535,14 +542,14 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
 # RATELIMIT_USE_CACHE = 'default'
 
 # Настройки для мониторинга
-ENABLE_MONITORING = os.getenv("ENABLE_MONITORING", "false").lower() == "true"
-
-if ENABLE_MONITORING:
-    INSTALLED_APPS += [
-        "django_prometheus",
-    ]
-    MIDDLEWARE = [
-        "django_prometheus.middleware.PrometheusBeforeMiddleware",
-        *MIDDLEWARE,
-        "django_prometheus.middleware.PrometheusAfterMiddleware",
-    ]
+# ENABLE_MONITORING = os.getenv("ENABLE_MONITORING", "false").lower() == "true"
+#
+# if ENABLE_MONITORING:
+#     INSTALLED_APPS += [
+#         "django_prometheus",
+#     ]
+#     MIDDLEWARE = [
+#         "django_prometheus.middleware.PrometheusBeforeMiddleware",
+#         *MIDDLEWARE,
+#         "django_prometheus.middleware.PrometheusAfterMiddleware",
+#     ]
