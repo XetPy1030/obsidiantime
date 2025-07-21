@@ -66,7 +66,10 @@ class Command(BaseCommand):
                         "Effect": "Allow",
                         "Principal": {"AWS": "*"},
                         "Action": ["s3:GetObject"],
-                        "Resource": [f"arn:aws:s3:::{bucket_name}/media/*"],
+                        "Resource": [
+                            f"arn:aws:s3:::{bucket_name}/static/*",
+                            f"arn:aws:s3:::{bucket_name}/media/*",
+                        ],
                     }
                 ],
             }
