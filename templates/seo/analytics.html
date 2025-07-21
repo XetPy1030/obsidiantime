@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Аналитика - ObsidianTime{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-chart-line"></i> Настройки аналитики
+            </h1>
+        </div>
+    </div>
+
+    <!-- Статус аналитики -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Общий статус
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Статус аналитики:</h6>
+                            {% if analytics.is_active %}
+                                <span class="badge bg-success fs-6">Активна</span>
+                            {% else %}
+                                <span class="badge bg-danger fs-6">Неактивна</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Активных систем:</h6>
+                            <span class="badge bg-info fs-6">{{ analytics.get_active_analytics|length }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Настройки аналитики -->
+    <div class="row">
+        <!-- Google Analytics -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fab fa-google"></i> Google Analytics
+                        {% if user.is_staff %}
+                        <a href="/admin/seo/analytics/1/change/" class="btn btn-sm btn-outline-primary float-end" target="_blank">
+                            <i class="fas fa-edit"></i> Настроить
+                        </a>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if analytics.has_google_analytics %}
+                        <div class="alert alert-success" data-no-auto-hide>
+                            <i class="fas fa-check-circle"></i>
+                            <strong>Настроен:</strong> {{ analytics.google_analytics_id }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ID отслеживания:</label>
+                            <code class="d-block p-2 bg-light">{{ analytics.google_analytics_id }}</code>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Код для вставки:</label>
+                            <pre class="bg-light p-3 rounded"><code>&lt;script async src="https://www.googletagmanager.com/gtag/js?id={{ analytics.google_analytics_id }}"&gt;&lt;/script&gt;
+&lt;script&gt;
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ analytics.google_analytics_id }}');
+&lt;/script&gt;</code></pre>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning" data-no-auto-hide>
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Не настроен</strong>
+                        </div>
+                        <p class="text-muted">
+                            Для настройки Google Analytics:
+                        </p>
+                        <ol class="text-muted">
+                            <li>Создайте аккаунт в <a href="https://analytics.google.com/" target="_blank">Google Analytics</a></li>
+                            <li>Создайте новое свойство для вашего сайта</li>
+                            <li>Получите ID отслеживания (G-XXXXXXXXXX)</li>
+                            <li>Введите ID в настройках аналитики</li>
+                        </ol>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Яндекс.Метрика -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fab fa-yandex"></i> Яндекс.Метрика
+                        {% if user.is_staff %}
+                        <a href="/admin/seo/analytics/1/change/" class="btn btn-sm btn-outline-primary float-end" target="_blank">
+                            <i class="fas fa-edit"></i> Настроить
+                        </a>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if analytics.has_yandex_metrika %}
+                        <div class="alert alert-success" data-no-auto-hide>
+                            <i class="fas fa-check-circle"></i>
+                            <strong>Настроена:</strong> {{ analytics.yandex_metrika_id }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ID счетчика:</label>
+                            <code class="d-block p-2 bg-light">{{ analytics.yandex_metrika_id }}</code>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Код для вставки:</label>
+                            <pre class="bg-light p-3 rounded"><code>&lt;script type="text/javascript"&gt;
+    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+    m[i].l=1*new Date();
+    for (var j = 0; j &lt; document.scripts.length; j++) {if (document.scripts[j].src === r) return; }
+    k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+    (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+    ym({{ analytics.yandex_metrika_id }}, "init", {
+        clickmap:true,
+        trackLinks:true,
+        accurateTrackBounce:true
+    });
+&lt;/script&gt;
+&lt;noscript&gt;&lt;div&gt;&lt;img src="https://mc.yandex.ru/watch/{{ analytics.yandex_metrika_id }}" style="position:absolute; left:-9999px;" alt="" /&gt;&lt;/div&gt;&lt;/noscript&gt;</code></pre>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning" data-no-auto-hide>
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Не настроена</strong>
+                        </div>
+                        <p class="text-muted">
+                            Для настройки Яндекс.Метрики:
+                        </p>
+                        <ol class="text-muted">
+                            <li>Создайте аккаунт в <a href="https://metrika.yandex.ru/" target="_blank">Яндекс.Метрике</a></li>
+                            <li>Добавьте новый сайт</li>
+                            <li>Получите ID счетчика</li>
+                            <li>Введите ID в настройках аналитики</li>
+                        </ol>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Facebook Pixel -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fab fa-facebook"></i> Facebook Pixel
+                        {% if user.is_staff %}
+                        <a href="/admin/seo/analytics/1/change/" class="btn btn-sm btn-outline-primary float-end" target="_blank">
+                            <i class="fas fa-edit"></i> Настроить
+                        </a>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if analytics.has_facebook_pixel %}
+                        <div class="alert alert-success" data-no-auto-hide>
+                            <i class="fas fa-check-circle"></i>
+                            <strong>Настроен:</strong> {{ analytics.facebook_pixel }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ID пикселя:</label>
+                            <code class="d-block p-2 bg-light">{{ analytics.facebook_pixel }}</code>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Код для вставки:</label>
+                            <pre class="bg-light p-3 rounded"><code>&lt;script&gt;
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '{{ analytics.facebook_pixel }}');
+    fbq('track', 'PageView');
+&lt;/script&gt;
+&lt;noscript&gt;&lt;img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id={{ analytics.facebook_pixel }}&amp;ev=PageView&amp;noscript=1"/&gt;&lt;/noscript&gt;</code></pre>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning" data-no-auto-hide>
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Не настроен</strong>
+                        </div>
+                        <p class="text-muted">
+                            Для настройки Facebook Pixel:
+                        </p>
+                        <ol class="text-muted">
+                            <li>Создайте аккаунт в <a href="https://business.facebook.com/" target="_blank">Facebook Business</a></li>
+                            <li>Создайте пиксель в Facebook Events Manager</li>
+                            <li>Получите ID пикселя</li>
+                            <li>Введите ID в настройках аналитики</li>
+                        </ol>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- VK Pixel -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fab fa-vk"></i> VK Pixel
+                        {% if user.is_staff %}
+                        <a href="/admin/seo/analytics/1/change/" class="btn btn-sm btn-outline-primary float-end" target="_blank">
+                            <i class="fas fa-edit"></i> Настроить
+                        </a>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if analytics.has_vk_pixel %}
+                        <div class="alert alert-success" data-no-auto-hide>
+                            <i class="fas fa-check-circle"></i>
+                            <strong>Настроен:</strong> {{ analytics.vk_pixel }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ID пикселя:</label>
+                            <code class="d-block p-2 bg-light">{{ analytics.vk_pixel }}</code>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Код для вставки:</label>
+                            <pre class="bg-light p-3 rounded"><code>&lt;script type="text/javascript"&gt;
+    !function(){var t=document.createElement("script");t.type="text/javascript",t.async=!0,t.src="https://vk.com/js/api/openapi.js?169",t.onload=function(){VK.Retargeting.Init("{{ analytics.vk_pixel }}"),VK.Retargeting.Hit()},document.head.appendChild(t)}();
+&lt;/script&gt;
+&lt;noscript&gt;&lt;img src="https://vk.com/rtrg?p={{ analytics.vk_pixel }}" style="position:fixed; left:-9999px;" alt=""/&gt;&lt;/noscript&gt;</code></pre>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning" data-no-auto-hide>
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Не настроен</strong>
+                        </div>
+                        <p class="text-muted">
+                            Для настройки VK Pixel:
+                        </p>
+                        <ol class="text-muted">
+                            <li>Создайте аккаунт в <a href="https://vk.com/business/" target="_blank">VK Business</a></li>
+                            <li>Создайте пиксель в VK Ads</li>
+                            <li>Получите ID пикселя</li>
+                            <li>Введите ID в настройках аналитики</li>
+                        </ol>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Дополнительные настройки -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog"></i> Дополнительные настройки
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Google Search Console</h6>
+                            {% if analytics.google_search_console %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle"></i>
+                                    <strong>Настроен</strong>
+                                </div>
+                                <code class="d-block p-2 bg-light">{{ analytics.google_search_console }}</code>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Не настроен</strong>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Яндекс.Вебмастер</h6>
+                            {% if analytics.yandex_webmaster %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle"></i>
+                                    <strong>Настроен</strong>
+                                </div>
+                                <code class="d-block p-2 bg-light">{{ analytics.yandex_webmaster }}</code>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Не настроен</strong>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Инструкции -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-question-circle"></i> Инструкции по настройке
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Как настроить аналитику:</h6>
+                            <ol>
+                                {% if user.is_staff %}
+                            <li>Перейдите в <a href="/admin/seo/analytics/1/change/" target="_blank">админ-панель</a></li>
+                            {% else %}
+                            <li>Обратитесь к администратору для настройки аналитики</li>
+                            {% endif %}
+                                <li>Введите ID отслеживания для нужных систем</li>
+                                <li>Активируйте аналитику, установив галочку "Is active"</li>
+                                <li>Сохраните настройки</li>
+                                <li>Проверьте работу аналитики на вашем сайте</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Полезные ссылки:</h6>
+                            <ul>
+                                <li><a href="https://analytics.google.com/" target="_blank">Google Analytics</a></li>
+                                <li><a href="https://metrika.yandex.ru/" target="_blank">Яндекс.Метрика</a></li>
+                                <li><a href="https://business.facebook.com/" target="_blank">Facebook Business</a></li>
+                                <li><a href="https://vk.com/business/" target="_blank">VK Business</a></li>
+                                <li><a href="https://search.google.com/search-console" target="_blank">Google Search Console</a></li>
+                                <li><a href="https://webmaster.yandex.ru/" target="_blank">Яндекс.Вебмастер</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Подсветка кода
+    document.querySelectorAll('pre code').forEach(function(block) {
+        block.style.display = 'block';
+        block.style.overflow = 'auto';
+        block.style.maxHeight = '200px';
+    });
+    
+    // Копирование кода в буфер обмена
+    document.querySelectorAll('pre').forEach(function(block) {
+        block.addEventListener('click', function() {
+            const code = this.querySelector('code');
+            if (code) {
+                navigator.clipboard.writeText(code.textContent).then(function() {
+                    // Показываем уведомление о копировании
+                    if (window.NotificationManager) {
+                        window.NotificationManager.show('Код скопирован в буфер обмена', 'success');
+                    }
+                });
+            }
+        });
+        
+        // Добавляем курсор pointer для индикации кликабельности
+        block.style.cursor = 'pointer';
+        block.title = 'Кликните для копирования кода';
+    });
+});
+</script>
+{% endblock %} 

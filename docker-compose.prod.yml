@@ -58,6 +58,7 @@ services:
     volumes:
       - ./nginx.prod.conf:/etc/nginx/conf.d/default.conf
       - static_volume:/app/staticfiles
+      - media_volume:/app/media
       # SSL certificates (если используете)
       # - ./ssl:/etc/nginx/ssl
     depends_on:
@@ -65,4 +66,5 @@ services:
 
 volumes:
   postgres_data:
-  static_volume: 
+  static_volume:
+  media_volume: 

@@ -1,0 +1,48 @@
+# Robots.txt для {{ site.name }}
+# Генерируется автоматически
+
+User-agent: *
+{% for rule in robots_rules %}
+{% if rule.is_global_rule %}
+{{ rule.get_rule_text }}
+{% else %}
+User-agent: {{ rule.user_agent }}
+{{ rule.get_rule_text }}
+{% endif %}
+{% endfor %}
+
+# Разрешаем индексацию основных разделов
+Allow: /
+Allow: /gallery/
+Allow: /quotes/
+Allow: /chat/
+Allow: /about/
+Allow: /static/
+Allow: /media/
+
+# Запрещаем индексацию служебных разделов
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /api/
+Disallow: /private/
+Disallow: /temp/
+Disallow: /cache/
+Disallow: /logs/
+
+# Настройки для поисковых роботов
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: {{ sitemap_url }}
+
+# Googlebot
+User-agent: Googlebot
+Crawl-delay: 1
+
+# Yandex
+User-agent: Yandex
+Crawl-delay: 1
+
+# Bingbot
+User-agent: Bingbot
+Crawl-delay: 1 

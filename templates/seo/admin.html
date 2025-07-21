@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}SEO Админ-панель - ObsidianTime{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-search"></i> SEO Админ-панель
+            </h1>
+        </div>
+    </div>
+
+    <!-- Статистика -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-sitemap"></i> Sitemap URLs
+                    </h5>
+                    <h3 class="card-text">{{ sitemap_urls.count }}</h3>
+                    <small>Активных URL в sitemap</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-robot"></i> Robots Rules
+                    </h5>
+                    <h3 class="card-text">{{ robots_rules.count }}</h3>
+                    <small>Правил robots.txt</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-line"></i> Analytics
+                    </h5>
+                    <h3 class="card-text">{{ analytics.get_active_analytics|length }}</h3>
+                    <small>Активных систем аналитики</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-cog"></i> Настройки
+                    </h5>
+                    <h3 class="card-text">{{ analytics.is_active|yesno:"Активна,Неактивна" }}</h3>
+                    <small>Статус аналитики</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основные разделы -->
+    <div class="row">
+        <!-- Sitemap URLs -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-sitemap"></i> Sitemap URLs
+                        {% if user.is_staff %}
+                        <a href="/admin/seo/sitemapurl/" class="btn btn-sm btn-outline-primary float-end" target="_blank">
+                            <i class="fas fa-edit"></i> Управление
+                        </a>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if sitemap_urls %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>URL</th>
+                                        <th>Приоритет</th>
+                                        <th>Частота</th>
+                                        <th>Статус</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for url in sitemap_urls %}
+                                    <tr>
+                                        <td>
+                                            <code>{{ url.url }}</code>
+                                            <br>
+                                            <small class="text-muted">{{ url.get_full_url }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if url.is_valid_priority %}success{% else %}danger{% endif %}">
+                                                {{ url.priority }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small>{{ url.get_changefreq_display }}</small>
+                                        </td>
+                                        <td>
+                                            {% if url.is_active %}
+                                                <span class="badge bg-success">Активен</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Неактивен</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                            <p>Нет настроенных URL для sitemap</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Robots Rules -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-robot"></i> Robots Rules
+                        {% if user.is_staff %}
+                        <a href="/admin/seo/robotsrule/" class="btn btn-sm btn-outline-primary float-end" target="_blank">
+                            <i class="fas fa-edit"></i> Управление
+                        </a>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if robots_rules %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>User Agent</th>
+                                        <th>Правило</th>
+                                        <th>Путь</th>
+                                        <th>Статус</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for rule in robots_rules %}
+                                    <tr>
+                                        <td>
+                                            <small>{{ rule.get_user_agent_display }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if rule.rule_type == 'allow' %}success{% else %}danger{% endif %}">
+                                                {{ rule.rule_type|title }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <code>{{ rule.path }}</code>
+                                        </td>
+                                        <td>
+                                            {% if rule.is_active %}
+                                                <span class="badge bg-success">Активно</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Неактивно</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                            <p>Нет настроенных правил robots.txt</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line"></i> Настройки аналитики
+                        {% if user.is_staff %}
+                        <a href="/admin/seo/analytics/" class="btn btn-sm btn-outline-primary float-end" target="_blank">
+                            <i class="fas fa-edit"></i> Управление
+                        </a>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Google Analytics</h6>
+                            {% if analytics.has_google_analytics %}
+                                <div class="alert alert-success" data-no-auto-hide>
+                                    <i class="fas fa-check-circle"></i>
+                                    <strong>Настроен:</strong> {{ analytics.google_analytics_id }}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning" data-no-auto-hide>
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Не настроен</strong>
+                                </div>
+                            {% endif %}
+
+                            <h6>Яндекс.Метрика</h6>
+                            {% if analytics.has_yandex_metrika %}
+                                <div class="alert alert-success" data-no-auto-hide>
+                                    <i class="fas fa-check-circle"></i>
+                                    <strong>Настроена:</strong> {{ analytics.yandex_metrika_id }}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning" data-no-auto-hide>
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Не настроена</strong>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Facebook Pixel</h6>
+                            {% if analytics.has_facebook_pixel %}
+                                <div class="alert alert-success" data-no-auto-hide>
+                                    <i class="fas fa-check-circle"></i>
+                                    <strong>Настроен:</strong> {{ analytics.facebook_pixel }}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning" data-no-auto-hide>
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Не настроен</strong>
+                                </div>
+                            {% endif %}
+
+                            <h6>VK Pixel</h6>
+                            {% if analytics.has_vk_pixel %}
+                                <div class="alert alert-success" data-no-auto-hide>
+                                    <i class="fas fa-check-circle"></i>
+                                    <strong>Настроен:</strong> {{ analytics.vk_pixel }}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning" data-no-auto-hide>
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Не настроен</strong>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEO файлы -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-code"></i> SEO файлы
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-robot fa-2x text-primary mb-2"></i>
+                                <h6>robots.txt</h6>
+                                <a href="/robots.txt" class="btn btn-sm btn-outline-primary" target="_blank">
+                                    <i class="fas fa-external-link-alt"></i> Просмотр
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-sitemap fa-2x text-success mb-2"></i>
+                                <h6>sitemap.xml</h6>
+                                <a href="/sitemap.xml" class="btn btn-sm btn-outline-success" target="_blank">
+                                    <i class="fas fa-external-link-alt"></i> Просмотр
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-code fa-2x text-info mb-2"></i>
+                                <h6>structured-data.json</h6>
+                                <a href="/structured-data.json" class="btn btn-sm btn-outline-info" target="_blank">
+                                    <i class="fas fa-external-link-alt"></i> Просмотр
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-chart-line fa-2x text-warning mb-2"></i>
+                                <h6>Analytics</h6>
+                                <a href="/seo/analytics/" class="btn btn-sm btn-outline-warning" target="_blank">
+                                    <i class="fas fa-external-link-alt"></i> Просмотр
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Быстрые действия -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt"></i> Быстрые действия
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            {% if user.is_staff %}
+                            <a href="/admin/seo/sitemapurl/add/" class="btn btn-outline-primary w-100 mb-2" target="_blank">
+                                <i class="fas fa-plus"></i> Добавить URL в sitemap
+                            </a>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            {% if user.is_staff %}
+                            <a href="/admin/seo/robotsrule/add/" class="btn btn-outline-success w-100 mb-2" target="_blank">
+                                <i class="fas fa-plus"></i> Добавить правило robots.txt
+                            </a>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            {% if user.is_staff %}
+                            <a href="/admin/seo/analytics/1/change/" class="btn btn-outline-info w-100 mb-2" target="_blank">
+                                <i class="fas fa-cog"></i> Настроить аналитику
+                            </a>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'seo:admin' %}" class="btn btn-outline-secondary w-100 mb-2">
+                                <i class="fas fa-sync"></i> Обновить страницу
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Автообновление статистики каждые 30 секунд
+    setInterval(function() {
+        // Можно добавить AJAX запрос для обновления статистики
+    }, 30000);
+});
+</script>
+{% endblock %} 

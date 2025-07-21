@@ -20,6 +20,8 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from obsidiantime.seo.views import RobotsTxtView, SitemapView, StructuredDataView
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("obsidiantime.main.urls")),
@@ -27,6 +29,11 @@ urlpatterns = [
     path("gallery/", include("obsidiantime.gallery.urls")),
     path("auth/", include("django.contrib.auth.urls")),
     path("tinymce/", include("tinymce.urls")),
+    path("seo/", include("obsidiantime.seo.urls")),
+    # SEO файлы - доступны напрямую
+    path("robots.txt", RobotsTxtView.as_view(), name="robots_txt"),
+    path("sitemap.xml", SitemapView.as_view(), name="sitemap_xml"),
+    path("structured-data.json", StructuredDataView.as_view(), name="structured_data"),
 ]
 
 # Обслуживание медиафайлов в режиме разработки

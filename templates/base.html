@@ -4,7 +4,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ObsidianTime{% endblock %}</title>
+    <title>{% block title %}{{ seo_settings.DEFAULT_SITE_NAME|default:"ObsidianTime" }}{% endblock %}</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{% block meta_description %}{{ seo_settings.DEFAULT_SITE_DESCRIPTION|default:"Место для мемов, общения и веселья!" }}{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}{{ seo_settings.DEFAULT_SITE_KEYWORDS|default:"мемы, чат, цитаты, общение, веселье, развлечения" }}{% endblock %}">
+    <meta name="author" content="{{ seo_settings.DEFAULT_AUTHOR|default:'ObsidianTime Team' }}">
+    <meta name="language" content="{{ seo_settings.DEFAULT_LANGUAGE|default:'ru' }}">
+    <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
+    <meta name="revisit-after" content="7 days">
+    <meta name="distribution" content="global">
+    <meta name="rating" content="general">
+    
+    <!-- Canonical URL -->
+    {% if canonical_url %}
+    <link rel="canonical" href="{{ canonical_url }}">
+    {% endif %}
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="{% block og_title %}{{ og_settings.DEFAULT_IMAGE|default:"ObsidianTime" }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ seo_settings.DEFAULT_SITE_DESCRIPTION|default:"Место для мемов, общения и веселья!" }}{% endblock %}">
+    <meta property="og:type" content="{{ og_settings.DEFAULT_TYPE|default:'website' }}">
+    <meta property="og:url" content="{{ canonical_url|default:request.build_absolute_uri }}">
+    <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{{ og_settings.DEFAULT_IMAGE|default:'/static/images/obsidian-logo.svg' }}{% endblock %}">
+    <meta property="og:locale" content="{{ og_settings.DEFAULT_LOCALE|default:'ru_RU' }}">
+    <meta property="og:site_name" content="{{ seo_settings.DEFAULT_SITE_NAME|default:'ObsidianTime' }}">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="{{ twitter_settings.DEFAULT_CARD_TYPE|default:'summary_large_image' }}">
+    <meta name="twitter:site" content="{{ twitter_settings.DEFAULT_SITE|default:'@obsidiantime' }}">
+    <meta name="twitter:creator" content="{{ twitter_settings.DEFAULT_CREATOR|default:'@obsidiantime' }}">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ og_settings.DEFAULT_IMAGE|default:"ObsidianTime" }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{{ seo_settings.DEFAULT_SITE_DESCRIPTION|default:"Место для мемов, общения и веселья!" }}{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{{ og_settings.DEFAULT_IMAGE|default:'/static/images/obsidian-logo.svg' }}{% endblock %}">
+    
+    <!-- Additional Meta Tags -->
+    <meta name="theme-color" content="#0d6efd">
+    <meta name="msapplication-TileColor" content="#0d6efd">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="{{ seo_settings.DEFAULT_SITE_NAME|default:'ObsidianTime' }}">
+    <meta name="application-name" content="{{ seo_settings.DEFAULT_SITE_NAME|default:'ObsidianTime' }}">
+    
+    <!-- Schema.org Structured Data -->
+    {% if structured_data %}
+    <script type="application/ld+json">
+    {{ structured_data|safe }}
+    </script>
+    {% endif %}
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
@@ -88,6 +135,9 @@
                                 {% if user.is_staff %}
                                 <li><a class="dropdown-item" href="/admin/" target="_blank">
                                     <i class="fas fa-cog"></i> Админка
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'seo:admin' %}">
+                                    <i class="fas fa-search"></i> SEO Админка
                                 </a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 {% endif %}
@@ -207,5 +257,61 @@
     </script>
     
     {% block extra_js %}{% endblock %}
+    
+    <!-- Analytics -->
+    {% if analytics and analytics.is_active %}
+        <!-- Google Analytics -->
+        {% if analytics.google_analytics_id %}
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ analytics.google_analytics_id }}"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '{{ analytics.google_analytics_id }}');
+        </script>
+        {% endif %}
+        
+        <!-- Yandex Metrika -->
+        {% if analytics.yandex_metrika_id %}
+        <script type="text/javascript">
+            (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) return; }
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+            (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+            ym({{ analytics.yandex_metrika_id }}, "init", {
+                clickmap:true,
+                trackLinks:true,
+                accurateTrackBounce:true
+            });
+        </script>
+        <noscript><div><img src="https://mc.yandex.ru/watch/{{ analytics.yandex_metrika_id }}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+        {% endif %}
+        
+        <!-- Facebook Pixel -->
+        {% if analytics.facebook_pixel %}
+        <script>
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '{{ analytics.facebook_pixel }}');
+            fbq('track', 'PageView');
+        </script>
+        <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id={{ analytics.facebook_pixel }}&ev=PageView&noscript=1"/></noscript>
+        {% endif %}
+        
+        <!-- VK Pixel -->
+        {% if analytics.vk_pixel %}
+        <script type="text/javascript">
+            !function(){var t=document.createElement("script");t.type="text/javascript",t.async=!0,t.src="https://vk.com/js/api/openapi.js?169",t.onload=function(){VK.Retargeting.Init("{{ analytics.vk_pixel }}"),VK.Retargeting.Hit()},document.head.appendChild(t)}();
+        </script>
+        <noscript><img src="https://vk.com/rtrg?p={{ analytics.vk_pixel }}" style="position:fixed; left:-9999px;" alt=""/></noscript>
+        {% endif %}
+    {% endif %}
 </body>
 </html> 

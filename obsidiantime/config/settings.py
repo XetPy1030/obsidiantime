@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
     "crispy_forms",
     "crispy_bootstrap4",
     "tinymce",
@@ -55,6 +56,7 @@ INSTALLED_APPS = [
     "obsidiantime.main",
     "obsidiantime.chat",
     "obsidiantime.gallery",
+    "obsidiantime.seo",
 ]
 
 MIDDLEWARE = [
@@ -81,6 +83,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "obsidiantime.main.context_processors.social_links",
+                "obsidiantime.seo.context_processors.seo_context",
             ],
         },
     },
@@ -214,3 +217,205 @@ if USE_S3:
     # Additional S3 settings for better performance
     AWS_S3_SIGNATURE_VERSION = "s3v4"
     AWS_S3_ADDRESSING_STYLE = "virtual"
+
+# SEO настройки
+SEO_SETTINGS = {
+    "DEFAULT_SITE_NAME": "ObsidianTime",
+    "DEFAULT_SITE_DESCRIPTION": "Место для мемов, общения и веселья!",
+    "DEFAULT_SITE_KEYWORDS": "мемы, чат, цитаты, общение, веселье, развлечения",
+    "DEFAULT_AUTHOR": "ObsidianTime Team",
+    "DEFAULT_LANGUAGE": "ru",
+    "DEFAULT_LOCALE": "ru_RU",
+    "DEFAULT_TIMEZONE": "Europe/Moscow",
+    "DEFAULT_CURRENCY": "RUB",
+    "DEFAULT_COUNTRY": "RU",
+}
+
+# Sitemap настройки
+SITEMAP_SETTINGS = {
+    "ENABLE_SITEMAP": True,
+    "SITEMAP_URL": "/sitemap.xml",
+    "ROBOTS_URL": "/robots.txt",
+    "SITEMAP_PRIORITY": {
+        "home": 1.0,
+        "gallery": 0.8,
+        "quotes": 0.8,
+        "chat": 0.6,
+        "about": 0.5,
+    },
+    "SITEMAP_CHANGEFREQ": {
+        "home": "daily",
+        "gallery": "weekly",
+        "quotes": "weekly",
+        "chat": "daily",
+        "about": "monthly",
+    },
+}
+
+# Open Graph настройки
+OPENGRAPH_SETTINGS = {
+    "DEFAULT_IMAGE": "/static/images/obsidian-logo.svg",
+    "DEFAULT_TYPE": "website",
+    "DEFAULT_LOCALE": "ru_RU",
+}
+
+# Twitter Card настройки
+TWITTER_CARD_SETTINGS = {
+    "DEFAULT_CARD_TYPE": "summary_large_image",
+    "DEFAULT_CREATOR": "@obsidiantime",
+    "DEFAULT_SITE": "@obsidiantime",
+}
+
+# Schema.org микроразметка настройки
+SCHEMA_SETTINGS = {
+    "ENABLE_SCHEMA": True,
+    "DEFAULT_ORGANIZATION": {
+        "name": "ObsidianTime",
+        "url": "https://obsidiantime.ru",
+        "logo": "https://obsidiantime.ru/static/images/obsidian-logo.svg",
+        "description": "Место для мемов, общения и веселья!",
+    },
+    "DEFAULT_WEBSITE": {
+        "name": "ObsidianTime",
+        "url": "https://obsidiantime.ru",
+        "description": "Место для мемов, общения и веселья!",
+        "inLanguage": "ru-RU",
+    },
+}
+
+# Meta теги по умолчанию
+DEFAULT_META_TAGS = {
+    "viewport": "width=device-width, initial-scale=1.0",
+    "robots": "index, follow",
+    "author": "ObsidianTime Team",
+    "language": "ru",
+    "revisit-after": "7 days",
+    "distribution": "global",
+    "rating": "general",
+    "theme-color": "#0d6efd",
+    "msapplication-TileColor": "#0d6efd",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "default",
+    "apple-mobile-web-app-title": "ObsidianTime",
+    "application-name": "ObsidianTime",
+    "msapplication-config": "/static/browserconfig.xml",
+}
+
+# Canonical URL настройки
+CANONICAL_SETTINGS = {
+    "ENABLE_CANONICAL": True,
+    "DEFAULT_DOMAIN": "https://obsidiantime.ru",
+    "FORCE_HTTPS": True,
+    "REMOVE_WWW": True,
+}
+
+# Структурированные данные (JSON-LD)
+STRUCTURED_DATA = {
+    "ENABLE_STRUCTURED_DATA": True,
+    "DEFAULT_CONTEXT": "https://schema.org",
+    "DEFAULT_TYPE": "WebSite",
+    "DEFAULT_POTENTIAL_ACTION": {
+        "type": "SearchAction",
+        "target": "https://obsidiantime.ru/search?q={search_term_string}",
+        "query-input": "required name=search_term_string",
+    },
+}
+
+# Аналитика и веб-мастера
+ANALYTICS_SETTINGS = {
+    "GOOGLE_ANALYTICS_ID": os.getenv("GOOGLE_ANALYTICS_ID", ""),
+    "YANDEX_METRIKA_ID": os.getenv("YANDEX_METRIKA_ID", ""),
+    "GOOGLE_SEARCH_CONSOLE": os.getenv("GOOGLE_SEARCH_CONSOLE", ""),
+    "YANDEX_WEBMASTER": os.getenv("YANDEX_WEBMASTER", ""),
+}
+
+# Социальные сети
+SOCIAL_MEDIA_SETTINGS = {
+    "FACEBOOK_APP_ID": os.getenv("FACEBOOK_APP_ID", ""),
+    "TWITTER_CREATOR": "@obsidiantime",
+    "TWITTER_SITE": "@obsidiantime",
+    "VK_GROUP_ID": os.getenv("VK_GROUP_ID", ""),
+    "TELEGRAM_CHANNEL": os.getenv("TELEGRAM_CHANNEL", ""),
+}
+
+# Кеширование для SEO
+SEO_CACHE_SETTINGS = {
+    "ENABLE_CACHE": True,
+    "CACHE_TIMEOUT": 3600,  # 1 час
+    "SITEMAP_CACHE_TIMEOUT": 86400,  # 24 часа
+    "ROBOTS_CACHE_TIMEOUT": 86400,  # 24 часа
+}
+
+# Настройки для поисковых роботов
+ROBOTS_SETTINGS = {
+    "USER_AGENT": "*",
+    "DISALLOW": [
+        "/admin/",
+        "/auth/",
+        "/api/",
+        "/private/",
+        "/temp/",
+        "/cache/",
+        "/logs/",
+    ],
+    "ALLOW": [
+        "/",
+        "/gallery/",
+        "/quotes/",
+        "/chat/",
+        "/about/",
+        "/static/",
+        "/media/",
+    ],
+    "SITEMAP": "/sitemap.xml",
+    "CRAWL_DELAY": 1,
+}
+
+# Настройки для производительности (Core Web Vitals)
+PERFORMANCE_SETTINGS = {
+    "ENABLE_COMPRESSION": True,
+    "ENABLE_MINIFICATION": True,
+    "ENABLE_LAZY_LOADING": True,
+    "ENABLE_PRELOAD": True,
+    "ENABLE_PREFETCH": True,
+    "ENABLE_DNS_PREFETCH": True,
+    "ENABLE_CRITICAL_CSS": True,
+    "ENABLE_IMAGE_OPTIMIZATION": True,
+    "ENABLE_WEBP_SUPPORT": True,
+    "ENABLE_AVIF_SUPPORT": False,  # Пока отключено для совместимости
+}
+
+# Настройки безопасности для SEO
+SEO_SECURITY_SETTINGS = {
+    "ENABLE_HSTS": True,
+    "ENABLE_CSP": True,
+    "ENABLE_XSS_PROTECTION": True,
+    "ENABLE_CONTENT_TYPE_NOSNIFF": True,
+    "ENABLE_FRAME_OPTIONS": True,
+    "ENABLE_REFERRER_POLICY": True,
+    "ENABLE_PERMISSIONS_POLICY": True,
+}
+
+# Настройки для мобильной оптимизации
+MOBILE_OPTIMIZATION = {
+    "ENABLE_AMP": False,  # Можно включить позже
+    "ENABLE_PWA": True,
+    "ENABLE_APP_MANIFEST": True,
+    "ENABLE_SERVICE_WORKER": True,
+    "ENABLE_OFFLINE_SUPPORT": True,
+}
+
+# Настройки для интернационализации
+I18N_SEO_SETTINGS = {
+    "DEFAULT_LANGUAGE": "ru",
+    "SUPPORTED_LANGUAGES": ["ru", "en"],
+    "LANGUAGE_DOMAINS": {
+        "ru": "obsidiantime.ru",
+        "en": "en.obsidiantime.ru",
+    },
+    "HREFLANG_ENABLED": True,
+    "TRANSLATION_ENABLED": False,  # Можно включить позже
+}
+
+# Django Sites Framework
+SITE_ID = 1
