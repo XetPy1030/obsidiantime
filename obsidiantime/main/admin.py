@@ -2,7 +2,14 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 
-from .models import Quote, QuoteLike, SiteSettings, SocialLink
+from .models import (
+    Feedback,
+    FeedbackComment,
+    Quote,
+    QuoteLike,
+    SiteSettings,
+    SocialLink,
+)
 
 # Константы для админки
 URL_PREVIEW_LENGTH = 40
@@ -237,6 +244,151 @@ class QuoteLikeAdmin(admin.ModelAdmin):
         """Показывает кнопки действий"""
         if hasattr(obj, "pk") and obj.pk:
             view_url = reverse("admin:main_quotelike_change", args=[obj.pk])
+            return format_html(
+                '<a class="button" href="{}">Редактировать</a>',
+                view_url,
+            )
+        return ""
+
+    get_actions.short_description = "Действия"
+
+
+class FeedbackCommentInline(admin.TabularInline):
+    model = FeedbackComment
+    extra = 1
+    fields = ["author", "comment_type", "comment", "is_internal", "created_at"]
+    readonly_fields = ["created_at"]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("author")
+
+
+@admin.register(Feedback)
+class FeedbackAdmin(admin.ModelAdmin):
+    list_display = [
+        "subject",
+        "name",
+        "email",
+        "feedback_type",
+        "status",
+        "created_at",
+        "is_resolved",
+        "comments_count",
+        "get_actions",
+    ]
+    list_filter = ["status", "feedback_type", "created_at", "user"]
+    search_fields = ["subject", "message", "name", "email", "user__username"]
+    readonly_fields = ["created_at", "updated_at", "is_resolved"]
+    date_hierarchy = "created_at"
+    list_editable = ["status"]
+
+    fieldsets = (
+        (
+            "Основная информация",
+            {
+                "fields": ("name", "email", "feedback_type", "subject", "message"),
+            },
+        ),
+        (
+            "Статус и пользователь",
+            {
+                "fields": ("status", "user"),
+            },
+        ),
+        (
+            "Временные метки",
+            {
+                "fields": ("created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    inlines = [FeedbackCommentInline]
+
+    def comments_count(self, obj):
+        """Показывает количество комментариев"""
+        count = obj.comments.count()
+        return f"{count} комм."
+
+    comments_count.short_description = "Комментарии"
+
+    def get_actions(self, obj):
+        """Показывает кнопки действий"""
+        if hasattr(obj, "pk") and obj.pk:
+            view_url = reverse("admin:main_feedback_change", args=[obj.pk])
+            return format_html(
+                '<a class="button" href="{}">Редактировать</a>',
+                view_url,
+            )
+        return ""
+
+    get_actions.short_description = "Действия"
+
+    def save_model(self, request, obj, form, change):
+        if change and "status" in form.changed_data:
+            # Можно добавить логику уведомления пользователя об изменении статуса
+            pass
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(FeedbackComment)
+class FeedbackCommentAdmin(admin.ModelAdmin):
+    list_display = [
+        "feedback_subject",
+        "author",
+        "comment_type",
+        "comment_preview",
+        "is_internal",
+        "created_at",
+        "get_actions",
+    ]
+    list_filter = ["comment_type", "is_internal", "created_at", "author"]
+    search_fields = ["comment", "feedback__subject", "author__username"]
+    readonly_fields = ["created_at"]
+    date_hierarchy = "created_at"
+    list_editable = ["is_internal"]
+
+    fieldsets = (
+        (
+            "Основная информация",
+            {
+                "fields": ("feedback", "author", "comment_type", "comment"),
+            },
+        ),
+        (
+            "Настройки",
+            {
+                "fields": ("is_internal",),
+            },
+        ),
+        (
+            "Временные метки",
+            {
+                "fields": ("created_at",),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    def feedback_subject(self, obj):
+        """Показывает тему обращения"""
+        return obj.feedback.subject
+
+    feedback_subject.short_description = "Тема обращения"
+
+    def comment_preview(self, obj):
+        """Показывает сокращенный комментарий"""
+        if len(obj.comment) > DESCRIPTION_PREVIEW_LENGTH:
+            return f"{obj.comment[:DESCRIPTION_PREVIEW_TRUNCATE]}..."
+        return obj.comment
+
+    comment_preview.short_description = "Комментарий"
+
+    def get_actions(self, obj):
+        """Показывает кнопки действий"""
+        if hasattr(obj, "pk") and obj.pk:
+            view_url = reverse("admin:main_feedbackcomment_change", args=[obj.pk])
             return format_html(
                 '<a class="button" href="{}">Редактировать</a>',
                 view_url,

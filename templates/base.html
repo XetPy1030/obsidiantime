@@ -47,6 +47,9 @@
     <meta name="apple-mobile-web-app-title" content="{{ seo_settings.DEFAULT_SITE_NAME|default:'ObsidianTime' }}">
     <meta name="application-name" content="{{ seo_settings.DEFAULT_SITE_NAME|default:'ObsidianTime' }}">
     
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    
     <!-- Schema.org Structured Data -->
     {% if structured_data %}
     <script type="application/ld+json">
@@ -124,6 +127,11 @@
                             <i class="fas fa-info-circle"></i> О проекте
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'main:feedback' %}">
+                            <i class="fas fa-envelope"></i> Обратная связь
+                        </a>
+                    </li>
                 </ul>
                 
                 <ul class="navbar-nav">
@@ -140,8 +148,14 @@
                                 <li><a class="dropdown-item" href="{% url 'seo:admin' %}">
                                     <i class="fas fa-search"></i> SEO Админка
                                 </a></li>
+                                <li><a class="dropdown-item" href="{% url 'main:admin_feedback_list' %}">
+                                    <i class="fas fa-tools"></i> Управление обращениями
+                                </a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 {% endif %}
+                                <li><a class="dropdown-item" href="{% url 'main:my_feedback' %}">
+                                    <i class="fas fa-history"></i> Мои обращения
+                                </a></li>
                                 <li>
                                     <form method="post" action="{% url 'logout' %}" class="d-inline">
                                         {% csrf_token %}

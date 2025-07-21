@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ feedback.subject }} - ObsidianTime{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Навигация -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'main:my_feedback' %}">
+                            <i class="fas fa-history"></i> Мои обращения
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ feedback.subject }}</li>
+                </ol>
+            </nav>
+
+            <!-- Основная информация об обращении -->
+            <div class="card shadow-lg mb-4">
+                <div class="card-header bg-{% if feedback.status == 'new' %}primary{% elif feedback.status == 'in_progress' %}warning{% elif feedback.status == 'resolved' %}success{% else %}secondary{% endif %} text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">
+                                <i class="fas fa-{% if feedback.feedback_type == 'suggestion' %}lightbulb{% elif feedback.feedback_type == 'bug' %}bug{% elif feedback.feedback_type == 'question' %}question-circle{% elif feedback.feedback_type == 'compliment' %}heart{% else %}comment{% endif %}"></i>
+                                {{ feedback.subject }}
+                            </h3>
+                            <small>
+                                {{ feedback.get_feedback_type_display }} • {{ feedback.created_at|date:"d.m.Y H:i" }}
+                            </small>
+                        </div>
+                        <div>
+                            <span class="badge bg-light text-dark fs-6">
+                                {{ feedback.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5><i class="fas fa-comment text-primary"></i> Сообщение:</h5>
+                            <div class="border rounded p-3 bg-light">
+                                {{ feedback.message|linebreaks }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-info-circle text-info"></i> Информация:</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>От:</strong> {{ feedback.name }}</li>
+                                <li><strong>Email:</strong> {{ feedback.email }}</li>
+                                <li><strong>Тип:</strong> {{ feedback.get_feedback_type_display }}</li>
+                                <li><strong>Статус:</strong> 
+                                    <span class="badge bg-{% if feedback.status == 'new' %}primary{% elif feedback.status == 'in_progress' %}warning{% elif feedback.status == 'resolved' %}success{% else %}secondary{% endif %}">
+                                        {{ feedback.get_status_display }}
+                                    </span>
+                                </li>
+                                <li><strong>Создано:</strong> {{ feedback.created_at|date:"d.m.Y H:i" }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    {% if feedback.admin_notes %}
+                    <hr>
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-sticky-note"></i> Заметки администратора:</h6>
+                        <p class="mb-0">{{ feedback.admin_notes|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Комментарии -->
+            <div class="card shadow-lg mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4><i class="fas fa-comments"></i> Комментарии ({{ page_obj.paginator.count }})</h4>
+                    {% if can_comment %}
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#commentForm">
+                        <i class="fas fa-plus"></i> Добавить комментарий
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="comments-list">
+                        {% if comments %}
+                            {% for comment in comments %}
+                        <div class="comment mb-3 p-3 border rounded {% if comment.is_internal %}bg-warning bg-opacity-10{% elif comment.is_admin_comment %}bg-info bg-opacity-10{% else %}bg-light{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2">
+                                        {% if comment.is_admin_comment %}
+                                            <i class="fas fa-user-shield text-primary"></i>
+                                        {% else %}
+                                            <i class="fas fa-user text-success"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <strong>
+                                            {{ comment.author.get_full_name|default:comment.author.username }}
+                                        </strong>
+                                        {% if comment.is_admin_comment %}
+                                            <span class="badge bg-primary ms-2">Администратор</span>
+                                        {% else %}
+                                            <span class="badge bg-success ms-2">Пользователь</span>
+                                        {% endif %}
+                                        {% if comment.is_internal %}
+                                        <span class="badge bg-warning text-dark ms-2">
+                                            <i class="fas fa-eye-slash"></i> Внутренний
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ comment.created_at|date:"d.m.Y H:i" }}</small>
+                            </div>
+                            <div class="comment-text">
+                                {{ comment.comment|linebreaks }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-comments fa-3x mb-3"></i>
+                            <p>Пока нет комментариев</p>
+                            {% if can_comment %}
+                            <p class="small">Будьте первым, кто оставит комментарий!</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    </div>
+                    
+                    <!-- Пагинация комментариев -->
+                    {% if page_obj.paginator.num_pages > 1 %}
+                    <div class="mt-4">
+                        <nav aria-label="Навигация по комментариям">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1" title="Первая страница">
+                                            <i class="fas fa-angle-double-left"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" title="Предыдущая страница">
+                                            <i class="fas fa-angle-left"></i>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">
+                                            <i class="fas fa-angle-double-left"></i>
+                                        </span>
+                                    </li>
+                                    <li class="page-item disabled">
+                                        <span class="page-link">
+                                            <i class="fas fa-angle-left"></i>
+                                        </span>
+                                    </li>
+                                {% endif %}
+
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" title="Следующая страница">
+                                            <i class="fas fa-angle-right"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" title="Последняя страница">
+                                            <i class="fas fa-angle-double-right"></i>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">
+                                            <i class="fas fa-angle-right"></i>
+                                        </span>
+                                    </li>
+                                    <li class="page-item disabled">
+                                        <span class="page-link">
+                                            <i class="fas fa-angle-double-right"></i>
+                                        </span>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        
+                        <div class="text-center text-muted small">
+                            Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                            ({{ page_obj.paginator.count }} комментариев всего)
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Форма добавления комментария -->
+            {% if comment_form %}
+            <div class="card shadow-lg collapse" id="commentForm">
+                <div class="card-header">
+                    <h5><i class="fas fa-plus"></i> Добавить комментарий</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if comment_form.errors %}
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-exclamation-triangle"></i> Ошибки в форме:</h6>
+                            {{ comment_form.errors }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ comment_form.comment.id_for_label }}" class="form-label">
+                                <i class="fas fa-comment text-primary"></i> Комментарий *
+                            </label>
+                            {{ comment_form.comment }}
+                            {% if comment_form.comment.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ comment_form.comment.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i> Минимум 5 символов
+                            </div>
+                        </div>
+                        
+                        {% if user.is_staff and comment_form.is_internal %}
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ comment_form.is_internal }}
+                                <label class="form-check-label" for="{{ comment_form.is_internal.id_for_label }}">
+                                    <i class="fas fa-eye-slash text-warning"></i> Внутренний комментарий
+                                </label>
+                                <div class="form-text">
+                                    Внутренние комментарии видны только администраторам
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Добавить комментарий
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.comment {
+    transition: all 0.3s ease;
+}
+
+.comment:hover {
+    transform: translateX(5px);
+}
+
+.badge {
+    font-size: 0.8em;
+}
+
+.breadcrumb a {
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %} 

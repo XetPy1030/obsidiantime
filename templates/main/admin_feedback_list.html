@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Управление обращениями - ObsidianTime{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Заголовок -->
+            <div class="card shadow-lg mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h1><i class="fas fa-tools"></i> Управление обращениями</h1>
+                    <p class="mb-0">Административная панель для работы с обращениями пользователей</p>
+                </div>
+            </div>
+
+            <!-- Статистика -->
+            <div class="row mb-4">
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-inbox fa-2x text-primary mb-2"></i>
+                            <h4 class="text-primary">{{ total_feedback }}</h4>
+                            <small class="text-muted">Всего</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-exclamation-circle fa-2x text-info mb-2"></i>
+                            <h4 class="text-info">{{ new_feedback }}</h4>
+                            <small class="text-muted">Новые</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                            <h4 class="text-warning">{{ in_progress_feedback }}</h4>
+                            <small class="text-muted">В работе</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                            <h4 class="text-success">{{ resolved_feedback }}</h4>
+                            <small class="text-muted">Решено</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-times-circle fa-2x text-secondary mb-2"></i>
+                            <h4 class="text-secondary">{{ closed_feedback }}</h4>
+                            <small class="text-muted">Закрыто</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <a href="{% url 'main:feedback' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-plus"></i> Новое обращение
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Фильтры -->
+            <div class="card shadow-lg mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-filter"></i> Фильтры</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        {% csrf_token %}
+                        <div class="col-md-3">
+                            <label class="form-label">Статус</label>
+                            <select name="status" class="form-select">
+                                <option value="">Все статусы</option>
+                                <option value="new" {% if status_filter == 'new' %}selected{% endif %}>Новые</option>
+                                <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>В работе</option>
+                                <option value="resolved" {% if status_filter == 'resolved' %}selected{% endif %}>Решено</option>
+                                <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Закрыто</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Тип обращения</label>
+                            <select name="feedback_type" class="form-select">
+                                <option value="">Все типы</option>
+                                <option value="suggestion" {% if feedback_type_filter == 'suggestion' %}selected{% endif %}>Предложение</option>
+                                <option value="bug" {% if feedback_type_filter == 'bug' %}selected{% endif %}>Ошибка</option>
+                                <option value="question" {% if feedback_type_filter == 'question' %}selected{% endif %}>Вопрос</option>
+                                <option value="compliment" {% if feedback_type_filter == 'compliment' %}selected{% endif %}>Благодарность</option>
+                                <option value="other" {% if feedback_type_filter == 'other' %}selected{% endif %}>Другое</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Поиск</label>
+                            <input type="text" name="search" class="form-control" placeholder="Поиск по тексту, имени, email..." value="{{ search_query }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Фильтровать
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Список обращений -->
+            <div class="card shadow-lg">
+                <div class="card-header">
+                    <h5><i class="fas fa-list"></i> Список обращений ({{ feedback_list|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if feedback_list %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Тема</th>
+                                        <th>От</th>
+                                        <th>Тип</th>
+                                        <th>Статус</th>
+                                        <th>Комментарии</th>
+                                        <th>Дата</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for feedback in feedback_list %}
+                                    <tr class="{% if feedback.status == 'new' %}table-info{% elif feedback.status == 'in_progress' %}table-warning{% elif feedback.status == 'resolved' %}table-success{% elif feedback.status == 'closed' %}table-secondary{% endif %}" data-feedback-id="{{ feedback.id }}">
+                                        <td>{{ feedback.id }}</td>
+                                        <td>
+                                            <strong>{{ feedback.subject }}</strong>
+                                            {% if feedback.user %}
+                                                <br><small class="text-muted">Пользователь: {{ feedback.user.username }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ feedback.name }}<br>
+                                            <small class="text-muted">{{ feedback.email }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if feedback.feedback_type == 'suggestion' %}warning{% elif feedback.feedback_type == 'bug' %}danger{% elif feedback.feedback_type == 'question' %}info{% elif feedback.feedback_type == 'compliment' %}success{% else %}secondary{% endif %}">
+                                                {{ feedback.get_feedback_type_display }}
+                                            </span>
+                                        </td>
+                                        <td class="status-cell">
+                                            <span class="badge bg-{% if feedback.status == 'new' %}info{% elif feedback.status == 'in_progress' %}warning{% elif feedback.status == 'resolved' %}success{% else %}secondary{% endif %} status-badge">
+                                                {{ feedback.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if feedback.total_comments > 0 %}
+                                                <span class="badge bg-primary">{{ feedback.total_comments }}</span>
+                                                {% if feedback.admin_comments > 0 %}
+                                                    <span class="badge bg-info">{{ feedback.admin_comments }} админ</span>
+                                                {% endif %}
+                                                {% if feedback.user_comments > 0 %}
+                                                    <span class="badge bg-success">{{ feedback.user_comments }} пользователь</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">Нет</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ feedback.created_at|date:"d.m.Y H:i" }}</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'main:admin_feedback_detail' feedback.pk %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'main:feedback_detail' feedback.pk %}" class="btn btn-sm btn-outline-info" target="_blank">
+                                                    <i class="fas fa-external-link-alt"></i>
+                                                </a>
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-outline-success" 
+                                                        data-status-change 
+                                                        data-feedback-id="{{ feedback.id }}" 
+                                                        data-status="resolved"
+                                                        title="Отметить как решенное">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Обращения не найдены</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0,0,0,0.05);
+}
+
+.badge {
+    font-size: 0.8em;
+}
+</style>
+
+{% block extra_js %}
+<script src="{% static 'js/feedback.js' %}"></script>
+{% endblock %}
+{% endblock %} 

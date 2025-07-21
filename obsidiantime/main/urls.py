@@ -13,5 +13,19 @@ urlpatterns = [
     path("register/", views.register, name="register"),
     path("login/", views.CustomLoginView.as_view(), name="login"),
     path("about/", views.about, name="about"),
+    path("feedback/", views.feedback, name="feedback"),
+    path("my-feedback/", views.my_feedback, name="my_feedback"),
+    path("feedback/<int:pk>/", views.feedback_detail, name="feedback_detail"),
+    path("management/feedback/", views.admin_feedback_list, name="admin_feedback_list"),
+    path(
+        "management/feedback/<int:pk>/",
+        views.admin_feedback_detail,
+        name="admin_feedback_detail",
+    ),
+    path(
+        "management/feedback/<int:pk>/change-status/",
+        views.change_feedback_status,
+        name="change_feedback_status",
+    ),
     path("api/errors/", views.api_errors, name="api_errors"),
 ]

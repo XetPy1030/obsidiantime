@@ -207,15 +207,27 @@
                     <p>
                         Есть вопросы, предложения или нашли баг? Мы всегда рады обратной связи!
                     </p>
+                    <div class="d-flex justify-content-center gap-3 mb-3">
+                        <a href="{% url 'main:feedback' %}" class="btn btn-primary">
+                            <i class="fas fa-envelope"></i> Обратная связь
+                        </a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'main:my_feedback' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-history"></i> Мои обращения
+                        </a>
+                        {% endif %}
+                    </div>
                     <ul class="list-unstyled">
-                        <li><i class="fas fa-envelope text-primary me-2"></i> Email: admin@obsidiantime.ru</li>
-                        <li><i class="fas fa-bug text-danger me-2"></i> Баг-репорты: GitHub Issues</li>
+                        <li><i class="fas fa-envelope text-primary me-2"></i> Email: xlobi@mail.ru</li>
                         <li><i class="fas fa-lightbulb text-warning me-2"></i> Предложения: Telegram канал</li>
                     </ul>
                     
                     <hr>
                     
                     <div class="text-center">
+                        <p>
+                            Есть вопросы, предложения или нашли баг? Мы всегда рады обратной связи!
+                        </p>
                         <small class="text-muted">
                             © 2025 ObsidianTime. Сделано с ❤️ Имперцам.
                         </small>

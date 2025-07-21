@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
@@ -17,8 +17,8 @@ from obsidiantime.chat.forms import CustomUserCreationForm
 from obsidiantime.chat.models import Message
 from obsidiantime.gallery.models import Meme
 
-from .forms import QuoteFilterForm, QuoteForm
-from .models import Quote, QuoteLike, SiteSettings
+from .forms import FeedbackCommentForm, FeedbackForm, QuoteFilterForm, QuoteForm
+from .models import Feedback, FeedbackComment, Quote, QuoteLike, SiteSettings
 
 logger = logging.getLogger(__name__)
 
@@ -204,3 +204,286 @@ def api_errors(request):
     except Exception as e:
         logger.error("Error processing frontend error: %s", str(e))
         return JsonResponse({"error": "Internal server error"}, status=500)
+
+
+def feedback(request):
+    """Страница обратной связи"""
+    if request.method == "POST":
+        form = FeedbackForm(request.POST)
+        if form.is_valid():
+            feedback_obj = form.save(commit=False)
+            if request.user.is_authenticated:
+                feedback_obj.user = request.user
+            feedback_obj.save()
+            messages.success(
+                request,
+                "Спасибо за ваше обращение! Мы рассмотрим его в ближайшее время.",
+            )
+            return redirect("main:feedback")
+    else:
+        # Предзаполняем форму для авторизованных пользователей
+        initial_data = {}
+        if request.user.is_authenticated:
+            initial_data = {
+                "name": request.user.get_full_name() or request.user.username,
+                "email": request.user.email,
+            }
+        form = FeedbackForm(initial=initial_data)
+
+    # Статистика для мотивации
+    total_feedback = Feedback.objects.count()
+    resolved_feedback = Feedback.objects.filter(
+        status__in=["resolved", "closed"]
+    ).count()
+
+    context = {
+        "form": form,
+        "total_feedback": total_feedback,
+        "resolved_feedback": resolved_feedback,
+    }
+    return render(request, "main/feedback.html", context)
+
+
+@login_required
+def my_feedback(request):
+    """Страница с обращениями пользователя"""
+    feedback_list = (
+        Feedback.objects.filter(user=request.user)
+        .annotate(
+            total_comments=Count("comments"),
+            public_comments=Count("comments", filter=Q(comments__is_internal=False)),
+        )
+        .order_by("-created_at")
+    )
+
+    # Статистика для пользователя
+    total_feedback = feedback_list.count()
+    resolved_feedback = feedback_list.filter(status__in=["resolved", "closed"]).count()
+    new_feedback = feedback_list.filter(status="new").count()
+    in_progress_feedback = feedback_list.filter(status="in_progress").count()
+
+    context = {
+        "feedback_list": feedback_list,
+        "total_feedback": total_feedback,
+        "resolved_feedback": resolved_feedback,
+        "new_feedback": new_feedback,
+        "in_progress_feedback": in_progress_feedback,
+    }
+    return render(request, "main/my_feedback.html", context)
+
+
+@login_required
+def feedback_detail(request, pk):
+    """Детальный просмотр обращения"""
+    feedback = get_object_or_404(Feedback, pk=pk)
+
+    # Проверяем права доступа
+    if not request.user.is_staff and feedback.user != request.user:
+        messages.error(request, "У вас нет прав для просмотра этого обращения.")
+        return redirect("main:my_feedback")
+
+    # Пагинация комментариев
+    if request.user.is_staff:
+        comments_list = feedback.comments.all().order_by("-created_at")
+    else:
+        comments_list = feedback.comments.filter(is_internal=False).order_by(
+            "-created_at"
+        )
+
+    paginator = Paginator(comments_list, 10)  # 10 комментариев на страницу
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    # Форма для добавления комментария
+    if request.method == "POST":
+        comment_form = FeedbackCommentForm(request.POST, user=request.user)
+        if comment_form.is_valid():
+            comment = comment_form.save(commit=False)
+            comment.feedback = feedback
+            comment.author = request.user
+            comment.save()
+            messages.success(request, "Комментарий добавлен!")
+            return redirect("main:feedback_detail", pk=pk)
+    else:
+        comment_form = FeedbackCommentForm(user=request.user)
+
+    # Определяем, может ли пользователь комментировать
+    can_comment = request.user.is_staff or feedback.user == request.user
+
+    context = {
+        "feedback": feedback,
+        "comments": page_obj.object_list,
+        "page_obj": page_obj,
+        "comment_form": comment_form,
+        "can_comment": can_comment,
+    }
+    return render(request, "main/feedback_detail.html", context)
+
+
+@login_required
+def admin_feedback_list(request):
+    """Административная панель для управления обращениями"""
+    if not request.user.is_staff:
+        messages.error(request, "У вас нет прав для доступа к административной панели.")
+        return redirect("main:home")
+
+    # Фильтры
+    status_filter = request.GET.get("status", "")
+    feedback_type_filter = request.GET.get("feedback_type", "")
+    search_query = request.GET.get("search", "")
+
+    feedback_list = Feedback.objects.all()
+
+    if status_filter:
+        feedback_list = feedback_list.filter(status=status_filter)
+    if feedback_type_filter:
+        feedback_list = feedback_list.filter(feedback_type=feedback_type_filter)
+    if search_query:
+        feedback_list = feedback_list.filter(
+            Q(subject__icontains=search_query)
+            | Q(message__icontains=search_query)
+            | Q(name__icontains=search_query)
+            | Q(email__icontains=search_query)
+        )
+
+    # Аннотации для статистики
+    feedback_list = feedback_list.annotate(
+        total_comments=Count("comments"),
+        admin_comments=Count("comments", filter=Q(comments__comment_type="admin")),
+        user_comments=Count("comments", filter=Q(comments__comment_type="user")),
+    ).order_by("-created_at")
+
+    # Статистика
+    total_feedback = Feedback.objects.count()
+    new_feedback = Feedback.objects.filter(status="new").count()
+    in_progress_feedback = Feedback.objects.filter(status="in_progress").count()
+    resolved_feedback = Feedback.objects.filter(status="resolved").count()
+    closed_feedback = Feedback.objects.filter(status="closed").count()
+
+    context = {
+        "feedback_list": feedback_list,
+        "total_feedback": total_feedback,
+        "new_feedback": new_feedback,
+        "in_progress_feedback": in_progress_feedback,
+        "resolved_feedback": resolved_feedback,
+        "closed_feedback": closed_feedback,
+        "status_filter": status_filter,
+        "feedback_type_filter": feedback_type_filter,
+        "search_query": search_query,
+    }
+    return render(request, "main/admin_feedback_list.html", context)
+
+
+@login_required
+def admin_feedback_detail(request, pk):
+    """Административный детальный просмотр обращения"""
+    if not request.user.is_staff:
+        messages.error(request, "У вас нет прав для доступа к административной панели.")
+        return redirect("main:home")
+
+    feedback = get_object_or_404(Feedback, pk=pk)
+
+    # Пагинация комментариев
+    comments_list = feedback.comments.all().order_by("-created_at")
+    paginator = Paginator(comments_list, 10)  # 10 комментариев на страницу
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    # Форма для добавления комментария
+    if request.method == "POST":
+        comment_form = FeedbackCommentForm(request.POST, user=request.user)
+        if comment_form.is_valid():
+            comment = comment_form.save(commit=False)
+            comment.feedback = feedback
+            comment.author = request.user
+            comment.save()
+
+            # Проверяем, это AJAX запрос или обычный
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse(
+                    {
+                        "success": True,
+                        "message": "Комментарий добавлен!",
+                        "comment": {
+                            "author_name": comment.author.get_full_name()
+                            or comment.author.username,
+                            "comment": comment.comment,
+                            "created_at": comment.created_at.strftime("%d.%m.%Y %H:%M"),
+                            "is_admin_comment": comment.is_admin_comment,
+                            "is_internal": comment.is_internal,
+                        },
+                    }
+                )
+            else:
+                messages.success(request, "Комментарий добавлен!")
+                return redirect("main:admin_feedback_detail", pk=pk)
+    else:
+        comment_form = FeedbackCommentForm(user=request.user)
+
+    context = {
+        "feedback": feedback,
+        "comments": page_obj.object_list,
+        "page_obj": page_obj,
+        "comment_form": comment_form,
+    }
+    return render(request, "main/admin_feedback_detail.html", context)
+
+
+@login_required
+def change_feedback_status(request, pk):
+    """AJAX изменение статуса обращения"""
+    if not request.user.is_staff:
+        return JsonResponse(
+            {"success": False, "message": "Недостаточно прав"}, status=403
+        )
+
+    if request.method != "POST":
+        return JsonResponse(
+            {"success": False, "message": "Метод не разрешен"}, status=405
+        )
+
+    try:
+        feedback = get_object_or_404(Feedback, pk=pk)
+
+        data = json.loads(request.body)
+        new_status = data.get("status")
+
+        if not new_status or new_status not in dict(Feedback.STATUS_CHOICES):
+            return JsonResponse(
+                {"success": False, "message": "Неверный статус"}, status=400
+            )
+
+        # Изменяем статус
+        old_status = feedback.status
+        feedback.status = new_status
+        feedback.save()
+
+        # Добавляем комментарий об изменении статуса
+        status_names = dict(Feedback.STATUS_CHOICES)
+        comment_text = (
+            f"Статус изменен с '{status_names[old_status]}' "
+            f"на '{status_names[new_status]}'"
+        )
+
+        FeedbackComment.objects.create(
+            feedback=feedback,
+            author=request.user,
+            comment=comment_text,
+            is_internal=True,
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Статус успешно изменен",
+                "new_status": new_status,
+                "new_status_display": status_names[new_status],
+            }
+        )
+
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {"success": False, "message": "Неверный формат данных"}, status=400
+        )
+    except Exception as e:
+        return JsonResponse({"success": False, "message": f"Ошибка: {e!s}"}, status=500)
