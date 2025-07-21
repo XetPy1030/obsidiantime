@@ -76,6 +76,8 @@ MIDDLEWARE = [
     # "obsidiantime.main.middleware.MemeMetricsMiddleware",
 ]
 
+PROMETHEUS_METRIC_NAMESPACE = "obsidiantime"
+
 ROOT_URLCONF = "obsidiantime.config.urls"
 
 TEMPLATES = [
