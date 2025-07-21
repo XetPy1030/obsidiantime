@@ -3,6 +3,9 @@ from django.db import models
 from django.utils import timezone
 from PIL import Image
 
+# Constants
+COMMENT_PREVIEW_LENGTH = 50
+
 
 class Meme(models.Model):
     title = models.CharField(max_length=200, verbose_name="Название")
@@ -97,4 +100,4 @@ class Comment(models.Model):
         verbose_name_plural = "Комментарии"
 
     def __str__(self):
-        return f"{self.author.username}: {self.content[:50]}..."
+        return f"{self.author.username}: {self.content[:COMMENT_PREVIEW_LENGTH]}..."
