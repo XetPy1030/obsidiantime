@@ -430,3 +430,107 @@ I18N_SEO_SETTINGS = {
 
 # Django Sites Framework
 SITE_ID = 1
+
+# CSRF настройки
+CSRF_TRUSTED_ORIGINS = [
+    "https://obsidiantime.ru",
+    "https://www.obsidiantime.ru",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
+# Настройки безопасности
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+SECURE_HSTS_SECONDS = 31536000  # 1 год
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# Настройки сессий
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+
+# Настройки для продакшена
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Настройки логирования
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "file": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "logs" / "django.log",
+            "formatter": "verbose",
+        },
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+    },
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
+
+# Настройки кеширования
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
+    }
+}
+
+# Настройки для файлов
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+
+# Настройки для медиа файлов
+MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
+ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/ogg"]
+
+# Настройки для сообщений
+MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
+
+# Настройки для Rate Limiting
+# RATELIMIT_ENABLE = True
+# RATELIMIT_USE_CACHE = 'default'
+
+# Настройки для мониторинга
+ENABLE_MONITORING = os.getenv("ENABLE_MONITORING", "false").lower() == "true"
+
+if ENABLE_MONITORING:
+    INSTALLED_APPS += [
+        "django_prometheus",
+    ]
+    MIDDLEWARE = [
+        "django_prometheus.middleware.PrometheusBeforeMiddleware",
+        *MIDDLEWARE,
+        "django_prometheus.middleware.PrometheusAfterMiddleware",
+    ]
