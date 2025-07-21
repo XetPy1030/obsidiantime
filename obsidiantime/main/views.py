@@ -1,3 +1,6 @@
+import json
+import logging
+
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -7,7 +10,8 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods, require_POST
 
 from obsidiantime.chat.forms import CustomUserCreationForm
 from obsidiantime.chat.models import Message
@@ -15,6 +19,8 @@ from obsidiantime.gallery.models import Meme
 
 from .forms import QuoteFilterForm, QuoteForm
 from .models import Quote, QuoteLike, SiteSettings
+
+logger = logging.getLogger(__name__)
 
 
 def home(request):
@@ -167,3 +173,34 @@ def about(request):
         "quotes_count": quotes_count,
     }
     return render(request, "main/about.html", context)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_errors(request):
+    """
+    API endpoint для получения ошибок с фронтенда
+    """
+    try:
+        data = json.loads(request.body)
+
+        # Логируем ошибку
+        logger.error(
+            "Frontend error: %s - %s",
+            data.get("type", "unknown"),
+            data.get("message", "No message"),
+            extra={
+                "error_data": data,
+                "user_agent": request.META.get("HTTP_USER_AGENT", ""),
+                "ip": request.META.get("REMOTE_ADDR", ""),
+                "user_id": request.user.id if request.user.is_authenticated else None,
+            },
+        )
+
+        return JsonResponse({"status": "received"})
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+    except Exception as e:
+        logger.error("Error processing frontend error: %s", str(e))
+        return JsonResponse({"error": "Internal server error"}, status=500)

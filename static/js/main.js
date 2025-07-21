@@ -95,16 +95,34 @@ const ObsidianTime = {
      */
     async reportError(errorInfo) {
         try {
-            await fetch('/api/errors/', {
+            const response = await fetch('/api/errors/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': Utils.getCookie('csrftoken')
                 },
-                body: JSON.stringify(errorInfo)
+                body: JSON.stringify({
+                    ...errorInfo,
+                    timestamp: new Date().toISOString(),
+                    url: window.location.href,
+                    userAgent: navigator.userAgent,
+                    viewport: {
+                        width: window.innerWidth,
+                        height: window.innerHeight
+                    }
+                })
             });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            this.log('Ошибка отправлена на сервер:', result);
+            
         } catch (e) {
-            // Игнорируем ошибки отправки
+            // Логируем ошибку отправки, но не показываем пользователю
+            this.log('Ошибка отправки отчета об ошибке:', e);
         }
     },
 
