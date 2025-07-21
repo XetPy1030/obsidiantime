@@ -151,6 +151,16 @@ STATICFILES_DIRS = [
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Storage settings for local development
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
@@ -205,16 +215,17 @@ if USE_S3:
     AWS_S3_FILE_OVERWRITE = False
     AWS_QUERYSTRING_AUTH = False
 
-    # Static files (CSS, JavaScript, Images)
-    # Для статических файлов можно использовать CloudFront CDN
-    STATICFILES_STORAGE = "obsidiantime.config.storage_backends.StaticStorage"
+    STORAGES = {
+        "default": {
+            "BACKEND": "obsidiantime.config.storage_backends.MediaStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "obsidiantime.config.storage_backends.StaticStorage",
+        },
+    }
     STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
-
-    # Media files
-    DEFAULT_FILE_STORAGE = "obsidiantime.config.storage_backends.MediaStorage"
     MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
 
-    # Additional S3 settings for better performance
     AWS_S3_SIGNATURE_VERSION = "s3v4"
     AWS_S3_ADDRESSING_STYLE = "virtual"
 
