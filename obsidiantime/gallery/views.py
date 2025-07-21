@@ -210,27 +210,33 @@ def top_memes(request):
             total_dislikes=Count("dislikes"),
             rating=Count("likes") - Count("dislikes"),
         )
-        .order_by("-rating", "-views")[:50]
+        .order_by("-rating", "-views")
     )
+
+    # Пагинация
+    paginator = Paginator(memes, 15)  # 15 мемов на страницу
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
 
     # Получаем информацию о лайках пользователя
     user_likes = set()
     user_dislikes = set()
     if request.user.is_authenticated:
         user_likes = set(
-            Like.objects.filter(user=request.user, meme__in=memes).values_list(
-                "meme_id", flat=True
-            )
+            Like.objects.filter(
+                user=request.user, meme__in=page_obj.object_list
+            ).values_list("meme_id", flat=True)
         )
 
         user_dislikes = set(
-            Dislike.objects.filter(user=request.user, meme__in=memes).values_list(
-                "meme_id", flat=True
-            )
+            Dislike.objects.filter(
+                user=request.user, meme__in=page_obj.object_list
+            ).values_list("meme_id", flat=True)
         )
 
     context = {
-        "memes": memes,
+        "memes": page_obj.object_list,
+        "page_obj": page_obj,
         "user_likes": user_likes,
         "user_dislikes": user_dislikes,
         "title": "Топ мемов",

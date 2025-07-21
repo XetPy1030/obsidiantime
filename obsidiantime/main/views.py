@@ -262,8 +262,14 @@ def my_feedback(request):
     new_feedback = feedback_list.filter(status="new").count()
     in_progress_feedback = feedback_list.filter(status="in_progress").count()
 
+    # Пагинация
+    paginator = Paginator(feedback_list, 10)  # 10 обращений на страницу
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
     context = {
-        "feedback_list": feedback_list,
+        "feedback_list": page_obj.object_list,
+        "page_obj": page_obj,
         "total_feedback": total_feedback,
         "resolved_feedback": resolved_feedback,
         "new_feedback": new_feedback,
@@ -360,8 +366,14 @@ def admin_feedback_list(request):
     resolved_feedback = Feedback.objects.filter(status="resolved").count()
     closed_feedback = Feedback.objects.filter(status="closed").count()
 
+    # Пагинация
+    paginator = Paginator(feedback_list, 20)  # 20 обращений на страницу
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
     context = {
-        "feedback_list": feedback_list,
+        "feedback_list": page_obj.object_list,
+        "page_obj": page_obj,
         "total_feedback": total_feedback,
         "new_feedback": new_feedback,
         "in_progress_feedback": in_progress_feedback,
