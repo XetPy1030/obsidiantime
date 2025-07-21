@@ -35,9 +35,6 @@ RUN poetry install
 # Copy project
 COPY . .
 
-# Create directories for media files
-RUN mkdir -p /app/media/memes
-
 # Expose port
 EXPOSE 8000
 
