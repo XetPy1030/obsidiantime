@@ -35,9 +35,6 @@ RUN poetry install
 # Copy project
 COPY . .
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
-
 # Create directories for media files
 RUN mkdir -p /app/media/memes
 
