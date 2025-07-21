@@ -200,12 +200,12 @@ if USE_S3:
 
     # Support for MinIO and other S3-compatible services
     AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL", None)
-    if AWS_S3_ENDPOINT_URL:
-        AWS_S3_CUSTOM_DOMAIN = AWS_S3_ENDPOINT_URL.replace("http://", "").replace(
-            "https://", ""
-        )
-    else:
-        AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+    # if AWS_S3_ENDPOINT_URL:
+    #     AWS_S3_CUSTOM_DOMAIN = AWS_S3_ENDPOINT_URL.replace("http://", "").replace(
+    #         "https://", ""
+    #     )
+    # else:
+    #     AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
 
     # S3 settings
     AWS_DEFAULT_ACL = "public-read"
@@ -223,8 +223,8 @@ if USE_S3:
             "BACKEND": "obsidiantime.config.storage_backends.StaticStorage",
         },
     }
-    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STORAGE_BUCKET_NAME}/static/"
-    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STORAGE_BUCKET_NAME}/media/"
+    # STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STORAGE_BUCKET_NAME}/static/"
+    # MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_STORAGE_BUCKET_NAME}/media/"
 
     AWS_S3_SIGNATURE_VERSION = "s3v4"
     AWS_S3_ADDRESSING_STYLE = "path"
