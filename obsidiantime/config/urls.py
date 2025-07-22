@@ -19,6 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django.views.static import serve
 
 from obsidiantime.seo.views import RobotsTxtView, SitemapView, StructuredDataView
 
@@ -34,6 +35,13 @@ urlpatterns = [
     path("robots.txt", RobotsTxtView.as_view(), name="robots_txt"),
     path("sitemap.xml", SitemapView.as_view(), name="sitemap_xml"),
     path("structured-data.json", StructuredDataView.as_view(), name="structured_data"),
+    # Favicon - доступен в корне
+    path(
+        "favicon.ico",
+        serve,
+        {"path": "images/favicon.ico", "document_root": settings.STATICFILES_DIRS[0]},
+        name="favicon",
+    ),
     # Prometheus метрики
     path("", include("django_prometheus.urls")),
 ]
