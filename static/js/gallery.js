@@ -435,7 +435,11 @@ class GalleryManager {
             button.innerHTML = '<span class="spinner"></span>';
         } else {
             button.disabled = false;
-            button.innerHTML = button.dataset.originalContent || button.innerHTML;
+            // Восстанавливаем оригинальное содержимое
+            if (button.dataset.originalContent) {
+                button.innerHTML = button.dataset.originalContent;
+                delete button.dataset.originalContent;
+            }
         }
     }
 
@@ -467,15 +471,11 @@ class GalleryManager {
      * Выполнение API запроса
      */
     async makeApiRequest(url, method = 'GET', data = null) {
-        const csrfToken = this.getCSRFToken();
-        console.log('Making API request to:', url);
-        console.log('CSRF token length:', csrfToken ? csrfToken.length : 0);
-        
         const options = {
             method,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': csrfToken
+                'X-CSRFToken': this.getCSRFToken()
             }
         };
 
@@ -498,9 +498,7 @@ class GalleryManager {
         // Сначала пытаемся получить из meta тега
         const metaToken = document.querySelector('meta[name="csrf-token"]');
         if (metaToken && metaToken.getAttribute('content')) {
-            const token = metaToken.getAttribute('content');
-            console.log('CSRF token from meta:', token ? token.substring(0, 10) + '...' : 'null');
-            return token;
+            return metaToken.getAttribute('content');
         }
         
         // Если нет в meta теге, ищем в cookies
@@ -516,7 +514,6 @@ class GalleryManager {
                 }
             }
         }
-        console.log('CSRF token from cookie:', cookieValue ? cookieValue.substring(0, 10) + '...' : 'null');
         return cookieValue;
     }
 }
