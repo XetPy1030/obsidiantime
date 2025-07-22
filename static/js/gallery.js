@@ -95,12 +95,16 @@ class GalleryManager {
 
         try {
             this.pendingRequests.add(requestKey);
+            // Показываем спиннер только на время запроса
             this.setButtonLoading(button, true);
 
             const response = await this.makeApiRequest(url, 'POST');
             
             if (response.ok) {
                 const data = await response.json();
+                // Сначала восстанавливаем содержимое кнопки
+                this.setButtonLoading(button, false);
+                // Затем обновляем счетчики
                 this.updateReactionButtons(memeId, data, isLike);
                 
                 // Показываем уведомление о действии
@@ -111,9 +115,10 @@ class GalleryManager {
         } catch (error) {
             console.error('Ошибка при обработке реакции:', error);
             window.NotificationManager?.error('Ошибка при обработке реакции');
+            // Восстанавливаем кнопку в случае ошибки
+            this.setButtonLoading(button, false);
         } finally {
             this.pendingRequests.delete(requestKey);
-            this.setButtonLoading(button, false);
         }
     }
 
@@ -167,12 +172,16 @@ class GalleryManager {
 
         try {
             this.pendingRequests.add(requestKey);
+            // Показываем спиннер только на время запроса
             this.setButtonLoading(button, true);
 
             const response = await this.makeApiRequest(url, 'POST');
             
             if (response.ok) {
                 const data = await response.json();
+                // Сначала восстанавливаем содержимое кнопки
+                this.setButtonLoading(button, false);
+                // Затем обновляем счетчики
                 this.updateQuoteLikeButton(button, data);
             } else {
                 throw new Error(`HTTP ${response.status}`);
@@ -180,9 +189,10 @@ class GalleryManager {
         } catch (error) {
             console.error('Ошибка при обработке лайка цитаты:', error);
             window.NotificationManager?.error('Ошибка при обработке лайка');
+            // Восстанавливаем кнопку в случае ошибки
+            this.setButtonLoading(button, false);
         } finally {
             this.pendingRequests.delete(requestKey);
-            this.setButtonLoading(button, false);
         }
     }
 
