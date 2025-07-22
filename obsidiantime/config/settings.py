@@ -460,7 +460,7 @@ SECURE_HSTS_PRELOAD = True
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_HTTPONLY = True
-CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # Должно быть False для доступа из JavaScript
 
 # Настройки для продакшена
 if not DEBUG:
