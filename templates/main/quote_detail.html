@@ -33,13 +33,13 @@
                                 <button class="btn quote-like-btn {% if user_liked %}liked{% endif %}"
                                         data-url="{% url 'main:toggle_quote_like' quote.pk %}"
                                         data-quote-id="{{ quote.pk }}">
-                                    <i class="fas fa-heart fa-2x mb-2"></i>
+                                    <i class="{% if user_liked %}fas{% else %}far{% endif %} fa-heart fa-2x mb-2"></i>
                                     <h4 class="like-count">{{ quote.likes_count }}</h4>
                                     <small>Нравится</small>
                                 </button>
                                 {% else %}
                                 <div class="text-muted">
-                                    <i class="fas fa-heart fa-2x mb-2"></i>
+                                    <i class="far fa-heart fa-2x mb-2"></i>
                                     <h4>{{ quote.likes_count }}</h4>
                                     <small>Нравится</small>
                                 </div>

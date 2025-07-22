@@ -210,11 +210,11 @@ class GalleryManager {
         const icon = button.querySelector('i');
         if (icon) {
             if (data.liked) {
-                icon.classList.remove('far');
-                icon.classList.add('fas');
+                // Если лайкнуто - показываем сплошное сердце
+                icon.className = 'fas fa-heart';
             } else {
-                icon.classList.remove('fas');
-                icon.classList.add('far');
+                // Если не лайкнуто - показываем пустое сердце
+                icon.className = 'far fa-heart';
             }
         }
     }

@@ -71,10 +71,20 @@ def quotes_list(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
+    # Получаем информацию о лайках пользователя
+    user_likes = set()
+    if request.user.is_authenticated:
+        user_likes = set(
+            QuoteLike.objects.filter(
+                user=request.user, quote__in=page_obj.object_list
+            ).values_list("quote_id", flat=True)
+        )
+
     context = {
         "form": form,
         "page_obj": page_obj,
         "quotes": page_obj.object_list,
+        "user_likes": user_likes,
     }
     return render(request, "main/quotes_list.html", context)
 

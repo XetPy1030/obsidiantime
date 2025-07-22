@@ -50,15 +50,15 @@
                         
                         <div class="d-flex align-items-center">
                             {% if user.is_authenticated %}
-                            <button class="btn btn-sm btn-outline-danger quote-like-btn me-2"
+                            <button class="btn btn-sm btn-outline-danger quote-like-btn me-2 {% if quote.id in user_likes %}liked{% endif %}"
                                     data-url="{% url 'main:toggle_quote_like' quote.pk %}"
                                     data-quote-id="{{ quote.pk }}">
-                                <i class="fas fa-heart"></i> 
+                                <i class="{% if quote.id in user_likes %}fas{% else %}far{% endif %} fa-heart"></i> 
                                 <span class="like-count">{{ quote.likes_count }}</span>
                             </button>
                             {% else %}
                             <span class="text-muted">
-                                <i class="fas fa-heart"></i> {{ quote.likes_count }}
+                                <i class="far fa-heart"></i> {{ quote.likes_count }}
                             </span>
                             {% endif %}
                             
@@ -127,4 +127,21 @@
     </nav>
     {% endif %}
 </div>
+
+<style>
+.quote-like-btn {
+    transition: all 0.3s ease;
+}
+
+.quote-like-btn.liked {
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+.quote-like-btn.liked:hover {
+    background-color: #c82333;
+    border-color: #c82333;
+}
+</style>
 {% endblock %} 
