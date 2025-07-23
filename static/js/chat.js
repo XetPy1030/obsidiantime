@@ -120,6 +120,7 @@ const ObsidianChat = (() => {
         bindEventListeners() {
             this.bindFormSubmissions();
             this.bindLoadMoreButton();
+            this.bindPollVoting();
         }
 
         /**
@@ -143,6 +144,20 @@ const ObsidianChat = (() => {
         bindLoadMoreButton() {
             this.domElements.loadMoreBtn?.addEventListener('click', () => {
                 this.loadOlderMessages();
+            });
+        }
+
+        /**
+         * Привязка обработчиков голосования
+         */
+        bindPollVoting() {
+            // Используем делегирование событий для динамически добавляемых элементов
+            document.addEventListener('click', (e) => {
+                const pollOption = e.target.closest('.poll-option');
+                if (pollOption) {
+                    e.preventDefault();
+                    this.handlePollVote(pollOption);
+                }
             });
         }
 
@@ -172,6 +187,101 @@ const ObsidianChat = (() => {
                 );
             } finally {
                 this.toggleSubmitButton(submitBtn, false);
+            }
+        }
+
+        /**
+         * Обработка голосования в опросе
+         */
+        async handlePollVote(pollOption) {
+            const pollId = pollOption.dataset.pollId;
+            const optionId = pollOption.dataset.optionId;
+            
+            if (!pollId || !optionId) {
+                console.error('Отсутствуют данные для голосования');
+                return;
+            }
+
+            // Проверяем аутентификацию
+            if (!window.chatConfig?.isAuthenticated) {
+                window.NotificationManager?.error('Необходимо войти в систему для голосования');
+                return;
+            }
+
+            try {
+                // Добавляем визуальную обратную связь
+                pollOption.style.pointerEvents = 'none';
+                pollOption.classList.add('voting');
+
+                const response = await fetch(`/chat/poll/${pollId}/vote/${optionId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': window.chatConfig.csrfToken
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Обновляем UI голосования
+                this.updatePollUI(pollOption, data);
+                
+                window.NotificationManager?.success(
+                    data.voted ? 'Голос учтен!' : 'Голос отменен!'
+                );
+
+            } catch (error) {
+                console.error('Ошибка голосования:', error);
+                window.NotificationManager?.error('Ошибка при голосовании');
+            } finally {
+                pollOption.style.pointerEvents = '';
+                pollOption.classList.remove('voting');
+            }
+        }
+
+        /**
+         * Обновление UI голосования
+         */
+        updatePollUI(pollOption, pollData) {
+            const pollContainer = pollOption.closest('.poll-container');
+            if (!pollContainer) return;
+
+            // Обновляем все варианты в этом опросе
+            const allOptions = pollContainer.querySelectorAll('.poll-option');
+            allOptions.forEach(option => {
+                const optionId = parseInt(option.dataset.optionId);
+                const optionData = pollData.options.find(opt => opt.id === optionId);
+                
+                if (optionData) {
+                    // Обновляем счетчик голосов
+                    const voteCount = option.querySelector('.poll-votes');
+                    if (voteCount) {
+                        voteCount.textContent = optionData.vote_count;
+                    }
+
+                    // Обновляем прогресс-бар
+                    const progressBar = option.querySelector('.poll-progress-bar');
+                    if (progressBar) {
+                        progressBar.style.width = `${optionData.vote_percentage}%`;
+                    }
+
+                    // Обновляем класс voted
+                    if (optionData.user_voted) {
+                        option.classList.add('voted');
+                    } else {
+                        option.classList.remove('voted');
+                    }
+                }
+            });
+
+            // Обновляем общее количество голосов
+            const totalVotes = pollContainer.querySelector('.poll-total-votes');
+            if (totalVotes) {
+                totalVotes.textContent = `${pollData.total_votes} голосов`;
             }
         }
 
