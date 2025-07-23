@@ -42,16 +42,16 @@ const ObsidianChat = (() => {
      */
     class ChatManager {
         constructor(config) {
-            this.config = { ...DEFAULT_CONFIG, ...config };
+            this.config = {...DEFAULT_CONFIG, ...config};
             this.state = {
-        lastMessageId: 0,
-        isLoading: false,
-        hasMoreMessages: true,
-        currentPage: 1,
-        refreshInterval: null,
-        chatMessages: null
+                lastMessageId: 0,
+                isLoading: false,
+                hasMoreMessages: true,
+                currentPage: 1,
+                refreshInterval: null,
+                chatMessages: null
             };
-            
+
             this.domElements = {};
             this.messageRenderer = new MessageRenderer(this.config);
             this.apiClient = new ChatApiClient(this.config);
@@ -60,7 +60,7 @@ const ObsidianChat = (() => {
         /**
          * Инициализация чата
          */
-    init() {
+        init() {
             if (!this.isOnChatPage()) return false;
 
             try {
@@ -86,8 +86,8 @@ const ObsidianChat = (() => {
          * Инициализация DOM элементов
          */
         initializeDomElements() {
-            const { selectors } = this.config;
-            
+            const {selectors} = this.config;
+
             this.domElements = {
                 chatMessages: document.querySelector(selectors.chatMessages),
                 loadMoreBtn: document.querySelector(selectors.loadMoreBtn),
@@ -97,7 +97,7 @@ const ObsidianChat = (() => {
             };
 
             this.state.chatMessages = this.domElements.chatMessages;
-            
+
             // Проверяем критически важные элементы
             if (!this.state.chatMessages) {
                 throw new Error('Chat messages container not found');
@@ -108,10 +108,10 @@ const ObsidianChat = (() => {
          * Настройка начального состояния
          */
         setupInitialState() {
-        this.updateLastMessageId();
-        this.hideLoadingIndicator();
-        this.scrollToBottom();
-        this.setupScrollHandler();
+            this.updateLastMessageId();
+            this.hideLoadingIndicator();
+            this.scrollToBottom();
+            this.setupScrollHandler();
         }
 
         /**
@@ -127,8 +127,8 @@ const ObsidianChat = (() => {
          * Привязка обработчиков форм
          */
         bindFormSubmissions() {
-            const { messageForm, pollForm } = this.domElements;
-            
+            const {messageForm, pollForm} = this.domElements;
+
             messageForm?.addEventListener('submit', (e) => {
                 this.handleFormSubmission(e, 'message');
             });
@@ -168,12 +168,12 @@ const ObsidianChat = (() => {
             event.preventDefault();
             const form = event.target;
             const submitBtn = form.querySelector('button[type="submit"]');
-            
+
             try {
                 this.toggleSubmitButton(submitBtn, true);
-                
+
                 const success = await this.apiClient.submitForm(form, formType);
-                
+
                 if (success) {
                     form.reset();
                     window.NotificationManager?.success(
@@ -196,7 +196,7 @@ const ObsidianChat = (() => {
         async handlePollVote(pollOption) {
             const pollId = pollOption.dataset.pollId;
             const optionId = pollOption.dataset.optionId;
-            
+
             if (!pollId || !optionId) {
                 console.error('Отсутствуют данные для голосования');
                 return;
@@ -226,10 +226,10 @@ const ObsidianChat = (() => {
                 }
 
                 const data = await response.json();
-                
+
                 // Обновляем UI голосования
                 this.updatePollUI(pollOption, data);
-                
+
                 window.NotificationManager?.success(
                     data.voted ? 'Голос учтен!' : 'Голос отменен!'
                 );
@@ -255,7 +255,7 @@ const ObsidianChat = (() => {
             allOptions.forEach(option => {
                 const optionId = parseInt(option.dataset.optionId);
                 const optionData = pollData.options.find(opt => opt.id === optionId);
-                
+
                 if (optionData) {
                     // Обновляем счетчик голосов
                     const voteCount = option.querySelector('.poll-votes');
@@ -288,9 +288,9 @@ const ObsidianChat = (() => {
         /**
          * Обновление ID последнего сообщения
          */
-    updateLastMessageId() {
+        updateLastMessageId() {
             const lastMessage = document.querySelector(`${this.config.selectors.messageItem}:last-child`);
-        if (lastMessage) {
+            if (lastMessage) {
                 this.state.lastMessageId = parseInt(lastMessage.dataset.messageId) || 0;
             }
         }
@@ -298,7 +298,7 @@ const ObsidianChat = (() => {
         /**
          * Скрытие индикатора загрузки
          */
-    hideLoadingIndicator() {
+        hideLoadingIndicator() {
             if (this.domElements.loadingIndicator) {
                 this.domElements.loadingIndicator.style.display = 'none';
             }
@@ -307,14 +307,14 @@ const ObsidianChat = (() => {
         /**
          * Настройка обработчика прокрутки
          */
-    setupScrollHandler() {
-        if (!this.state.chatMessages) return;
+        setupScrollHandler() {
+            if (!this.state.chatMessages) return;
 
             this.state.chatMessages.addEventListener('scroll', this.throttle(() => {
                 if (this.shouldLoadMoreMessages()) {
-                this.loadOlderMessages();
-            }
-        }, 250));
+                    this.loadOlderMessages();
+                }
+            }, 250));
         }
 
         /**
@@ -331,20 +331,20 @@ const ObsidianChat = (() => {
         /**
          * Начало автообновления
          */
-    startAutoRefresh() {
-        this.state.refreshInterval = setInterval(() => {
-            this.refreshMessages();
-        }, this.config.refreshInterval);
+        startAutoRefresh() {
+            this.state.refreshInterval = setInterval(() => {
+                this.refreshMessages();
+            }, this.config.refreshInterval);
         }
 
         /**
          * Остановка автообновления
          */
-    stopAutoRefresh() {
-        if (this.state.refreshInterval) {
-            clearInterval(this.state.refreshInterval);
-            this.state.refreshInterval = null;
-        }
+        stopAutoRefresh() {
+            if (this.state.refreshInterval) {
+                clearInterval(this.state.refreshInterval);
+                this.state.refreshInterval = null;
+            }
         }
 
         /**
@@ -352,14 +352,14 @@ const ObsidianChat = (() => {
          */
         async refreshMessages() {
             try {
-                const data = await this.apiClient.getMessages({ last_id: this.state.lastMessageId });
-                
-            if (data.messages && data.messages.length > 0) {
+                const data = await this.apiClient.getMessages({last_id: this.state.lastMessageId});
+
+                if (data.messages && data.messages.length > 0) {
                     this.processIncomingMessages(data.messages);
-                    
+
                     // Проверяем, что last_id корректен
                     if (data.last_id !== undefined && data.last_id !== null) {
-                this.state.lastMessageId = data.last_id;
+                        this.state.lastMessageId = data.last_id;
                     } else {
                         console.warn('last_id is undefined in API response');
                         // Получаем максимальный ID из сообщений как fallback
@@ -370,8 +370,8 @@ const ObsidianChat = (() => {
                             this.state.lastMessageId = Math.max(...messageIds);
                         }
                     }
-                    
-                this.scrollToBottom();
+
+                    this.scrollToBottom();
                 }
             } catch (error) {
                 console.warn('Ошибка обновления чата:', error);
@@ -382,50 +382,50 @@ const ObsidianChat = (() => {
          * Загрузка старых сообщений
          */
         async loadOlderMessages() {
-        if (this.state.isLoading || !this.state.hasMoreMessages) return;
+            if (this.state.isLoading || !this.state.hasMoreMessages) return;
 
-        this.state.isLoading = true;
-        this.updateLoadMoreButton('loading');
+            this.state.isLoading = true;
+            this.updateLoadMoreButton('loading');
 
             try {
                 const firstMessage = document.querySelector(`${this.config.selectors.messageItem}:first-child`);
-        const beforeId = firstMessage ? firstMessage.dataset.messageId : null;
+                const beforeId = firstMessage ? firstMessage.dataset.messageId : null;
 
                 const data = await this.apiClient.getMessages({
-            page: this.state.currentPage + 1,
-            before_id: beforeId
+                    page: this.state.currentPage + 1,
+                    before_id: beforeId
                 });
 
-            this.handleOlderMessagesResponse(data);
+                this.handleOlderMessagesResponse(data);
             } catch (error) {
                 console.error('Ошибка загрузки старых сообщений:', error);
                 window.NotificationManager?.error('Ошибка загрузки сообщений');
             } finally {
-            this.state.isLoading = false;
-            this.updateLoadMoreButton('normal');
+                this.state.isLoading = false;
+                this.updateLoadMoreButton('normal');
             }
         }
 
         /**
          * Обработка ответа с старыми сообщениями
          */
-    handleOlderMessagesResponse(data) {
-        if (data.messages && data.messages.length > 0) {
-            const scrollHeight = this.state.chatMessages.scrollHeight;
-            
+        handleOlderMessagesResponse(data) {
+            if (data.messages && data.messages.length > 0) {
+                const scrollHeight = this.state.chatMessages.scrollHeight;
+
                 // Добавляем элементы в обратном порядке
                 data.messages.reverse().forEach(item => {
                     this.messageRenderer.prependMessage(item, this.state.chatMessages);
-            });
+                });
 
-            this.state.currentPage++;
-            this.state.hasMoreMessages = data.has_more;
+                this.state.currentPage++;
+                this.state.hasMoreMessages = data.has_more;
 
-            // Сохраняем позицию прокрутки
-            this.state.chatMessages.scrollTop = this.state.chatMessages.scrollHeight - scrollHeight;
-        } else {
-            this.state.hasMoreMessages = false;
-        }
+                // Сохраняем позицию прокрутки
+                this.state.chatMessages.scrollTop = this.state.chatMessages.scrollHeight - scrollHeight;
+            } else {
+                this.state.hasMoreMessages = false;
+            }
         }
 
         /**
@@ -485,7 +485,7 @@ const ObsidianChat = (() => {
          */
         throttle(func, limit) {
             let inThrottle;
-            return function() {
+            return function () {
                 const args = arguments;
                 const context = this;
                 if (!inThrottle) {
@@ -554,18 +554,18 @@ const ObsidianChat = (() => {
          * Добавление элемента сообщения в конец
          */
         appendMessageElement(message, container) {
-        if (this.messageExists(message.id)) return;
+            if (this.messageExists(message.id)) return;
 
-        const messageElement = this.createMessageElement(message);
+            const messageElement = this.createMessageElement(message);
             container.appendChild(messageElement);
-        messageElement.classList.add('fade-in');
+            messageElement.classList.add('fade-in');
         }
 
         /**
          * Добавление элемента сообщения в начало
          */
         prependMessageElement(message, container) {
-        const messageElement = this.createMessageElement(message);
+            const messageElement = this.createMessageElement(message);
             container.insertBefore(messageElement, container.firstChild);
         }
 
@@ -574,7 +574,7 @@ const ObsidianChat = (() => {
          */
         appendDateSeparator(dateSeparator, container) {
             // Проверяем существование по дате и по читаемому тексту (для надежности)
-            if (this.dateSeparatorExists(dateSeparator.date) || 
+            if (this.dateSeparatorExists(dateSeparator.date) ||
                 this.dateSeparatorExistsByText(dateSeparator.date_readable)) {
                 return;
             }
@@ -588,7 +588,7 @@ const ObsidianChat = (() => {
          */
         prependDateSeparator(dateSeparator, container) {
             // Проверяем существование по дате и по читаемому тексту (для надежности)
-            if (this.dateSeparatorExists(dateSeparator.date) || 
+            if (this.dateSeparatorExists(dateSeparator.date) ||
                 this.dateSeparatorExistsByText(dateSeparator.date_readable)) {
                 return;
             }
@@ -600,17 +600,17 @@ const ObsidianChat = (() => {
         /**
          * Создание элемента сообщения
          */
-    createMessageElement(message) {
-        const div = document.createElement('div');
-        div.className = 'message-item';
-        div.dataset.messageId = message.id;
-        
-        if (message.author === this.getCurrentUsername()) {
-            div.classList.add('own');
-        }
+        createMessageElement(message) {
+            const div = document.createElement('div');
+            div.className = 'message-item';
+            div.dataset.messageId = message.id;
 
-        div.innerHTML = this.createMessageHTML(message);
-        return div;
+            if (message.author === this.getCurrentUsername()) {
+                div.classList.add('own');
+            }
+
+            div.innerHTML = this.createMessageHTML(message);
+            return div;
         }
 
         /**
@@ -620,21 +620,21 @@ const ObsidianChat = (() => {
             const div = document.createElement('div');
             div.className = 'date-separator';
             div.dataset.date = dateSeparator.date;
-            
+
             div.innerHTML = `
                 <div class="date-separator-line"></div>
                 <div class="date-separator-text">${this.escapeHtml(dateSeparator.date_readable)}</div>
                 <div class="date-separator-line"></div>
             `;
-            
+
             return div;
         }
 
         /**
          * Создание HTML содержимого сообщения
          */
-    createMessageHTML(message) {
-        let html = `
+        createMessageHTML(message) {
+            let html = `
             <div class="d-flex justify-content-between">
                 <strong class="text-primary">${this.escapeHtml(message.author)}</strong>
                 <small class="text-muted">${message.created_at}</small>
@@ -642,29 +642,29 @@ const ObsidianChat = (() => {
             <div class="message-content mt-2">
         `;
 
-        if (message.message_type === 'poll' && message.poll) {
-            html += this.createPollHTML(message.poll);
-        } else {
-            html += this.escapeHtml(message.content).replace(/\n/g, '<br>');
-        }
+            if (message.message_type === 'poll' && message.poll) {
+                html += this.createPollHTML(message.poll);
+            } else {
+                html += this.escapeHtml(message.content).replace(/\n/g, '<br>');
+            }
 
-        html += '</div>';
-        return html;
+            html += '</div>';
+            return html;
         }
 
         /**
          * Создание HTML для голосования
          */
-    createPollHTML(poll) {
-        let html = `
+        createPollHTML(poll) {
+            let html = `
             <div class="poll-container">
                 <h6><i class="fas fa-poll"></i> ${this.escapeHtml(poll.question)}</h6>
                 <div class="poll-options">
         `;
 
-        poll.options.forEach(option => {
-            const votedClass = option.user_voted ? 'voted' : '';
-            html += `
+            poll.options.forEach(option => {
+                const votedClass = option.user_voted ? 'voted' : '';
+                html += `
                 <div class="poll-option ${votedClass}" 
                      data-option-id="${option.id}" 
                      data-poll-id="${poll.id}">
@@ -677,9 +677,9 @@ const ObsidianChat = (() => {
                     </div>
                 </div>
             `;
-        });
+            });
 
-        html += `
+            html += `
                 </div>
                 <div class="text-center mt-2">
                     <small class="text-muted poll-total-votes">${poll.total_votes} голосов</small>
@@ -687,7 +687,7 @@ const ObsidianChat = (() => {
             </div>
         `;
 
-        return html;
+            return html;
         }
 
         /**
@@ -764,10 +764,10 @@ const ObsidianChat = (() => {
          * Отправка формы
          */
         async submitForm(form, formType) {
-        const formData = new FormData(form);
-        
+            const formData = new FormData(form);
+
             const response = await fetch(form.action, {
-            method: 'POST',
+                method: 'POST',
                 body: formData,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -810,13 +810,13 @@ const ObsidianChat = (() => {
 
                 state.config = config;
                 state.chatManager = new ChatManager(config);
-                
+
                 const initialized = state.chatManager.init();
                 if (initialized) {
                     state.initialized = true;
                     console.log('Chat module initialized successfully');
                 }
-                
+
                 return state.chatManager;
             } catch (error) {
                 console.error('Failed to initialize chat module:', error);
@@ -855,7 +855,7 @@ const ObsidianChat = (() => {
         /**
          * Очистка ресурсов
          */
-    cleanup() {
+        cleanup() {
             if (state.chatManager) {
                 state.chatManager.cleanup();
                 state.chatManager = null;
