@@ -76,7 +76,7 @@
                                                     <span class="poll-votes">{{ option.vote_count }}</span>
                                                 </div>
                                                     <div class="poll-progress">
-                                                        <div class="poll-progress-bar" style="width: {{ option.vote_percentage }}%"></div>
+                                                        <div class="poll-progress-bar" style="width: {{ option.vote_percentage|stringformat:"f" }}%"></div>
                                                     </div>
                                                 </div>
                                                 {% endfor %}
