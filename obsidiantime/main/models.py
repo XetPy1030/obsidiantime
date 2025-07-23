@@ -55,6 +55,8 @@ class SocialLink(models.Model):
         ("telegram", "Telegram"),
         ("discord", "Discord"),
         ("vk", "VKontakte"),
+        ("donationalerts", "DonationAlerts"),
+        ("boosty", "Boosty"),
         ("other", "Другое"),
     ]
 
@@ -83,6 +85,8 @@ class SocialLink(models.Model):
             "telegram": "fab fa-telegram",
             "discord": "fab fa-discord",
             "vk": "fab fa-vk",
+            "donationalerts": "fas fa-heart",
+            "boosty": "simple-icons--boosty",
         }
         return icons.get(self.platform, "fas fa-link")
 
