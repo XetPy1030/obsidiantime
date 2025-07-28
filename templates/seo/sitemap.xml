@@ -5,7 +5,7 @@
         <loc>{{ url.loc }}</loc>
         <lastmod>{{ url.lastmod|date:"Y-m-d" }}</lastmod>
         <changefreq>{{ url.changefreq }}</changefreq>
-        <priority>{{ url.priority }}</priority>
+        <priority>{{ url.priority|stringformat:"f" }}</priority>
     </url>
     {% endfor %}
 </urlset> 
