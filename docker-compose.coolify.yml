@@ -1,5 +1,6 @@
 services:
   web:
+    container_name: obsidian-web
     build: .
     restart: always
     command: >
