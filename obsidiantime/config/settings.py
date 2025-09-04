@@ -502,18 +502,18 @@ LOGGING = {
     },
     "loggers": {
         "django": {
-            "handlers": ["console", "file"],
+            "handlers": ["console",],
             "level": "INFO",
             "propagate": False,
         },
         "django.request": {
-            "handlers": ["console", "file"],
-            "level": "WARNING",
+            "handlers": ["console",],
+            "level": "INFO",
             "propagate": False,
         },
         "django.security": {
-            "handlers": ["console", "file"],
-            "level": "WARNING",
+            "handlers": ["console",],
+            "level": "INFO",
             "propagate": False,
         },
     },
