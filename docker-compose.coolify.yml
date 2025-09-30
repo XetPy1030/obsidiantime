@@ -9,3 +9,9 @@ services:
         python manage.py collectstatic --noinput &&
         gunicorn obsidiantime.config.wsgi:application --bind 0.0.0.0:8000 --workers 3
       "
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true
