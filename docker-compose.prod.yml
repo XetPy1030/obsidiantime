@@ -33,7 +33,7 @@ services:
     networks:
       - web-network
     environment:
-      - DEBUG=False
+      - DEBUG=${DEBUG}
       - SECRET_KEY=${SECRET_KEY}
       - DB_NAME=obsidiantime
       - DB_USER=postgres
