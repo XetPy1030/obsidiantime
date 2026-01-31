@@ -51,7 +51,6 @@ services:
       "
     volumes:
       - .:/app
-      - static_volume:/app/staticfiles
     networks:
       - web-network
     environment:
