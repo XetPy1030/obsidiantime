@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}Конфиденциальность - ObsidianTime{% endblock %}
+{% block meta_description %}Какие данные о посетителях собирает ObsidianTime, зачем и как ими управлять.{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="h3 mb-0"><i class="fas fa-user-shield"></i> Конфиденциальность и сбор данных</h1>
+                </div>
+                <div class="card-body">
+                    <p class="lead">
+                        Здесь честно перечислено всё, что сайт ObsidianTime узнаёт о посетителях,
+                        зачем это нужно и как это отключить или удалить.
+                    </p>
+                    <p class="text-muted small mb-0">Редакция от {{ tracking_policy_version }}</p>
+                </div>
+            </div>
+
+            <!-- Управление своими данными -->
+            <div class="card shadow-sm mb-4" id="privacy-panel">
+                <div class="card-body">
+                    <h2 class="h5"><i class="fas fa-sliders-h text-primary"></i> Ваши данные</h2>
+                    <p class="mb-3" data-privacy-status></p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-primary" data-privacy-action="change">
+                            <i class="fas fa-toggle-on"></i> Изменить согласие
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" data-privacy-action="show">
+                            <i class="fas fa-eye"></i> Показать, что о вас сохранено
+                        </button>
+                        <a href="{% url 'tracking:my_data' %}?download=1" class="btn btn-outline-primary">
+                            <i class="fas fa-download"></i> Скачать (JSON)
+                        </a>
+                        <button type="button" class="btn btn-outline-danger" data-privacy-action="delete">
+                            <i class="fas fa-trash"></i> Удалить мои данные
+                        </button>
+                    </div>
+                    <pre class="privacy-output mt-3" data-privacy-output hidden></pre>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5"><i class="fas fa-list text-primary"></i> Что собирается</h2>
+
+                    <h3 class="h6 mt-3">Необходимые данные — всегда, без отдельного согласия</h3>
+                    <p>Без них не работает вход в аккаунт и защита форм. Для аналитики не используются.</p>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr><th>Cookie</th><th>Зачем</th><th>Срок</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>sessionid</code></td><td>Вход в аккаунт</td><td>2 недели</td></tr>
+                                <tr><td><code>csrftoken</code></td><td>Защита форм от подделки запросов</td><td>1 год</td></tr>
+                                <tr><td><code>ot_consent</code></td><td>Запоминает ваш выбор в этом баннере</td><td>1 год</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>
+                        Если вы регистрируетесь, пишете в чат, загружаете мемы, добавляете цитаты или пишете
+                        в обратную связь — сохраняется то, что вы сами отправили (имя пользователя, email, тексты, файлы).
+                    </p>
+
+                    <h3 class="h6 mt-4">Аналитика — только если вы нажали «Разрешить»</h3>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-top">
+                            <thead>
+                                <tr><th style="width: 30%">Категория</th><th>Что именно</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Идентификатор посетителя</td>
+                                    <td>Случайный номер в cookie <code>ot_vid</code>, чтобы связать ваши визиты между собой (1 год)</td>
+                                </tr>
+                                <tr>
+                                    <td>Из HTTP-запроса</td>
+                                    <td>IP-адрес, User-Agent (браузер и ОС), языки браузера (Accept-Language), время запроса</td>
+                                </tr>
+                                <tr>
+                                    <td>Аккаунт</td>
+                                    <td>Если вы вошли — ваш аккаунт связывается с данными посещений</td>
+                                </tr>
+                                <tr>
+                                    <td>Экран и окно</td>
+                                    <td>Разрешение и доступная область экрана, размер окна, плотность пикселей, глубина цвета, ориентация</td>
+                                </tr>
+                                <tr>
+                                    <td>Устройство</td>
+                                    <td>
+                                        Платформа, производитель браузера, число ядер процессора, объём памяти,
+                                        поддержка касаний, видеокарта (производитель и модель через WebGL),
+                                        в браузерах на Chromium — модель устройства, версия ОС, архитектура и версии браузера (Client Hints)
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Язык и время</td>
+                                    <td>Язык и список языков браузера, часовой пояс и смещение от UTC</td>
+                                </tr>
+                                <tr>
+                                    <td>Сеть</td>
+                                    <td>Тип подключения, примерная скорость и задержка, режим экономии трафика (если браузер сообщает)</td>
+                                </tr>
+                                <tr>
+                                    <td>Настройки браузера</td>
+                                    <td>Тёмная/светлая тема, уменьшение анимации, включены ли cookie, встроенный просмотр PDF, сигналы Do Not Track и Global Privacy Control</td>
+                                </tr>
+                                <tr>
+                                    <td>Просмотры страниц</td>
+                                    <td>Адрес и заголовок страницы, откуда вы пришли (referrer), UTM-метки, тип перехода, длина истории вкладки</td>
+                                </tr>
+                                <tr>
+                                    <td>Поведение на странице</td>
+                                    <td>
+                                        Время на странице (общее и активное), максимальная глубина прокрутки, число кликов,
+                                        скорость загрузки страницы;
+                                        клики по ссылкам и кнопкам — текст кнопки, адрес ссылки, координаты клика
+                                    </td>
+                                </tr>
+                                {% if analytics and analytics.is_active %}
+                                <tr>
+                                    <td>Внешние счётчики</td>
+                                    <td>
+                                        {% if analytics.yandex_metrika_id %}Яндекс.Метрика{% endif %}
+                                        {% if analytics.google_analytics_id %}Google Analytics{% endif %}
+                                        {% if analytics.facebook_pixel %}Facebook Pixel{% endif %}
+                                        {% if analytics.vk_pixel %}VK Pixel{% endif %}
+                                        — собирают данные по своим правилам и хранят у себя
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 class="h6 mt-4">Что мы не собираем</h3>
+                    <ul>
+                        <li>Текст, который вы вводите в поля, и пароли</li>
+                        <li>Точное местоположение (GPS), камеру, микрофон, контакты</li>
+                        <li>Историю посещений других сайтов</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5"><i class="fas fa-bullseye text-primary"></i> Зачем</h2>
+                    <ul>
+                        <li>Понимать, какие разделы популярны, и развивать сайт</li>
+                        <li>Находить ошибки отображения на разных устройствах и браузерах</li>
+                        <li>Защищать сайт от спама и злоупотреблений</li>
+                    </ul>
+                    <p class="mb-0">Мы не продаём данные и не передаём их третьим лицам, кроме перечисленных внешних счётчиков.</p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5"><i class="fas fa-clock text-primary"></i> Хранение и ваши права</h2>
+                    <ul class="mb-0">
+                        <li>Данные аналитики хранятся {{ tracking_retention_days }} дней, затем удаляются автоматически.</li>
+                        <li>Отозвать согласие можно в любой момент кнопкой «Изменить согласие» выше или ссылкой внизу каждой страницы. После отзыва сбор прекращается, а уже собранные данные удаляются.</li>
+                        <li>Посмотреть и скачать всё, что о вас сохранено, можно кнопками выше.</li>
+                        <li>
+                            Кнопка «Удалить мои данные» стирает всё, включая журнал согласий.
+                            По остальным вопросам пишите через <a href="{% url 'main:feedback' %}">обратную связь</a>.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

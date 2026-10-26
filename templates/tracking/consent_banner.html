@@ -1,0 +1,56 @@
+{# Баннер согласия. Показывается и управляется из static/js/tracking.js #}
+<div id="consent-banner" class="consent-banner" role="dialog" aria-labelledby="consent-banner-title" hidden>
+    <div class="container">
+        <div class="consent-banner__inner">
+            <div class="consent-banner__text">
+                <h6 id="consent-banner-title" class="mb-2">
+                    <i class="fas fa-shield-alt me-1"></i> Какие данные мы собираем
+                </h6>
+                <p class="mb-2 small">
+                    С вашего согласия мы сохраняем на своём сервере сведения о посещении:
+                    IP-адрес, данные браузера и устройства (модель, ОС, экран, язык, часовой пояс,
+                    видеокарта, тип подключения), открытые страницы и откуда вы пришли,
+                    время на странице, прокрутку и клики по ссылкам и кнопкам.
+                    {% if analytics and analytics.is_active %}
+                        Также подключаются сторонние счётчики
+                        {% if analytics.yandex_metrika_id %}Яндекс.Метрика{% endif %}
+                        {% if analytics.google_analytics_id %}Google Analytics{% endif %}
+                        {% if analytics.facebook_pixel %}Facebook Pixel{% endif %}
+                        {% if analytics.vk_pixel %}VK Pixel{% endif %}.
+                    {% endif %}
+                    Текст, который вы вводите, и пароли мы не собираем.
+                </p>
+                <p class="mb-0 small">
+                    Без согласия сайт работает так же. Изменить решение, посмотреть или удалить свои данные
+                    можно в любой момент на странице
+                    <a href="{% url 'tracking:privacy' %}">«Конфиденциальность»</a>.
+                </p>
+
+                <div class="consent-banner__details mt-3" hidden>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="consent-necessary" checked disabled>
+                        <label class="form-check-label small" for="consent-necessary">
+                            <strong>Необходимые</strong> — вход в аккаунт, защита форм (CSRF) и запоминание вашего выбора.
+                            Всегда включены, аналитику не собирают.
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="consent-analytics">
+                        <label class="form-check-label small" for="consent-analytics">
+                            <strong>Аналитика</strong> — всё перечисленное выше. Хранится
+                            {{ tracking_retention_days }} дн., не продаётся и не передаётся третьим лицам
+                            {% if analytics and analytics.is_active %}(кроме указанных счётчиков){% endif %}.
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="consent-banner__actions">
+                <button type="button" class="btn btn-primary" data-consent-action="accept">Разрешить</button>
+                <button type="button" class="btn btn-outline-light" data-consent-action="decline">Только необходимые</button>
+                <button type="button" class="btn btn-link text-light" data-consent-action="customize">Настроить</button>
+                <button type="button" class="btn btn-light" data-consent-action="save" hidden>Сохранить выбор</button>
+            </div>
+        </div>
+    </div>
+</div>
